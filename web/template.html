@@ -1,0 +1,729 @@
+<meta charset="utf-8">
+<title>ผังคำวินิจฉัย ๑๕๒๖/๒๕๖๙</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Noto+Serif+Thai:wght@600;700&display=swap">
+<style>
+/* Layout: three panes — section index (left), relation graph (centre), testimony ledger (right); stacks on phones */
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --sunken:#e9ebef; --line:#d5d9e0; --fg:#18202c; --muted:#5b6575; --faint:#8a93a3;
+  --accent:#28407a; --accent-soft:#e3e8f4;
+  --k-testimony:#2f6fbf; --k-defense:#5f7f6a; --k-accusation:#c07a14; --k-action:#c4452c; --k-finding:#7a4bb0; --k-ruling:#8d1f2b;
+  --n-politic:#b3303b; --n-national:#3c5a9c; --n-province:#20857f; --n-district:#7b8a25; --n-unknown:#8a93a3;
+  --n-witness:#d08a10; --n-person:#6b7280; --n-org:#2a2f38; --n-group:#9a6b3f;
+  --font-ui:"IBM Plex Sans Thai",system-ui,"Leelawadee UI","Tahoma",sans-serif;
+  --font-head:"Noto Serif Thai","IBM Plex Sans Thai",Georgia,serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --surface:#1a1f28; --sunken:#222833; --line:#2e3644; --fg:#e6e9ef; --muted:#a3acbb; --faint:#6f7888;
+  --accent:#9db4ef; --accent-soft:#25304a;
+  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a;
+  --n-politic:#e0606b; --n-national:#7e9be0; --n-province:#4fc0b8; --n-district:#b3c24f; --n-unknown:#8a93a3;
+  --n-witness:#f0b445; --n-person:#9aa3b2; --n-org:#d8dde6; --n-group:#c9996b;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --surface:#1a1f28; --sunken:#222833; --line:#2e3644; --fg:#e6e9ef; --muted:#a3acbb; --faint:#6f7888;
+  --accent:#9db4ef; --accent-soft:#25304a;
+  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a;
+  --n-politic:#e0606b; --n-national:#7e9be0; --n-province:#4fc0b8; --n-district:#b3c24f; --n-unknown:#8a93a3;
+  --n-witness:#f0b445; --n-person:#9aa3b2; --n-org:#d8dde6; --n-group:#c9996b;
+  color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.55}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:300px minmax(0,1fr) 380px;grid-template-rows:auto minmax(0,1fr);height:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;gap:12px}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+header h1{font-family:var(--font-head);font-size:20px;margin:0;text-wrap:balance}
+header .sub{color:var(--muted);font-size:13px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-height:0;min-width:0;display:flex;flex-direction:column}
+.pane-h{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.scroll{overflow:auto;min-height:0;flex:1}
+
+input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--sunken)}
+.toc{padding:6px 6px 12px}
+.cat{margin-top:8px}
+.cat>.cat-h{display:flex;align-items:center;gap:6px;width:100%;padding:6px 6px;background:none;border:0;cursor:pointer;text-align:left;font-weight:600;font-family:var(--font-head);font-size:14px}
+.cat>.cat-h .chev{transition:transform .15s;color:var(--faint);font-size:10px;width:10px}
+.cat.closed>.cat-h .chev{transform:rotate(-90deg)}
+.cat.closed>.items{display:none}
+.sec{display:flex;align-items:flex-start;gap:8px;width:100%;padding:5px 8px;border:0;background:none;text-align:left;cursor:pointer;border-radius:6px;color:var(--fg)}
+.sec:hover{background:var(--sunken)}
+.sec[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.sec .t{flex:1;min-width:0}
+.sec .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;padding-top:2px}
+.sec.child{padding-left:26px;font-size:13px}
+.sec.hidden{display:none}
+
+.graph-pane{position:relative;overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12.5px;user-select:none}
+.chip .sw{width:14px;height:3px;border-radius:2px}
+.chip[aria-pressed="false"]{opacity:.45}
+.chip[aria-pressed="false"] .sw{background:var(--faint)!important}
+.secinfo{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.secinfo h2{font-family:var(--font-head);font-size:16px;margin:0;text-wrap:balance}
+.secinfo p{margin:0;color:var(--muted);max-width:80ch}
+.secinfo .meta{font-size:12px;color:var(--faint)}
+svg#g{flex:1;width:100%;min-height:360px;display:block;cursor:grab}
+svg#g:active{cursor:grabbing}
+.legend{position:absolute;left:10px;bottom:10px;background:color-mix(in srgb,var(--surface) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px;max-width:calc(100% - 120px)}
+.legend span{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.zoombtns{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
+.zoombtns button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;font-size:16px}
+.empty{position:absolute;inset:auto 0 45% 0;text-align:center;color:var(--faint)}
+
+.node circle,.node rect{stroke:var(--surface);stroke-width:1.5px;cursor:pointer}
+.node.witness circle{fill:var(--surface)!important;stroke-width:2.5px}
+.node text{font-size:11px;fill:var(--fg);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
+.node.dim,.link.dim{opacity:.12}
+.node.sel circle,.node.sel rect{stroke:var(--fg);stroke-width:3px}
+.node.self circle{stroke-dasharray:2 2}
+.link{fill:none;cursor:pointer}
+.link:hover{stroke-opacity:1}
+
+.detail{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.detail h3{font-family:var(--font-head);font-size:17px;margin:0;text-wrap:balance}
+.detail .role{color:var(--muted);font-size:13px}
+.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;font-weight:600;white-space:nowrap}
+.group-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:4px}
+.group-h b{font-size:13px}
+.group-h span{font-size:12px;color:var(--faint)}
+.stmt{border-left:3px solid var(--line);padding:2px 0 2px 10px;display:flex;flex-direction:column;gap:3px}
+.stmt .who{font-size:12.5px;color:var(--muted)}
+.stmt .who button{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font-weight:600;text-align:left}
+.stmt .txt{margin:0;font-size:13.5px}
+.pg{display:inline-block;font-weight:600;color:var(--fg);background:var(--sunken);border-radius:4px;padding:0 6px;font-variant-numeric:tabular-nums}
+.orders .pg{margin-right:4px}
+.stmt .src{font-size:11.5px;color:var(--faint)}
+.stmt .src button{border:0;background:none;padding:0;color:var(--faint);cursor:pointer;text-decoration:underline dotted}
+.orders{background:var(--sunken);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.hint{color:var(--faint);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{background:var(--sunken);border-radius:6px;padding:6px 8px}
+.stats b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.stats span{font-size:11.5px;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:10px 6px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpanel{display:flex;flex-direction:column;min-height:0;flex:1}
+.tabpanel[hidden]{display:none}
+.pplbar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pplbar select{padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:var(--sunken);font-size:12.5px;min-width:0}
+.pplnote{font-size:12px;color:var(--faint)}
+.ppl{padding:4px 6px 12px}
+.prow{display:flex;flex-direction:column;gap:3px;padding:6px 8px;border-radius:6px}
+.prow:hover{background:var(--sunken)}
+.prow.on{background:var(--accent-soft)}
+.prow .pname{border:0;background:none;padding:0;text-align:left;cursor:pointer;font-weight:600;color:var(--fg)}
+.prow .pname small{display:block;font-weight:400;font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .pdir{display:flex;gap:6px}
+.prow .pdir button,.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:1px 9px;font-size:12px;cursor:pointer;font-variant-numeric:tabular-nums}
+.prow .pdir button:disabled{opacity:.4;cursor:default}
+.prow .pdir button:not(:disabled):hover,.seg button:hover{border-color:var(--accent);color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pgrp{display:flex;flex-direction:column;gap:8px}
+.pgrp .group-h button{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font-weight:600;font-size:13px;text-align:left}
+.outcome{border:1px solid var(--line);border-left:4px solid var(--k-ruling);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.outcome h4{margin:0;font-family:var(--font-head);font-size:15px}
+.outcome .sub{font-size:12px;color:var(--faint);font-weight:600;margin-top:2px}
+.outcome .note{font-size:12.5px;color:var(--muted)}
+.outcome .note button{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font-weight:600;text-align:left}
+.outcome .item{font-size:13px;display:flex;gap:6px;align-items:baseline}
+.outcome .item .q{cursor:pointer;border-radius:4px}
+.outcome .item .q:hover{background:var(--sunken)}
+.otags{display:flex;flex-wrap:wrap;gap:5px}
+.otag{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.otag.sc{color:var(--k-ruling)} .otag.cr{color:var(--k-action)} .otag.dm{color:var(--k-defense)} .otag.ev{color:var(--k-finding)} .otag.nf{color:var(--muted)}
+.sec .otags{margin-top:3px} .sec .otag{font-size:10.5px;padding:0 6px;font-weight:500}
+.sec .tt{flex:1;min-width:0;display:flex;flex-direction:column}
+.more{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 10px;cursor:pointer;align-self:flex-start}
+
+/* source viewer: the scanned PDF page with the quoted passage highlighted */
+.viewer{position:fixed;top:0;right:0;bottom:0;width:min(780px,100vw);z-index:20;background:var(--surface);border-left:1px solid var(--line);
+  box-shadow:-12px 0 32px rgba(0,0,0,.18);display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.viewer[hidden]{display:none}
+.vbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.vbar h4{margin:0;font-family:var(--font-head);font-size:15px;flex:1;min-width:160px}
+.vbar button{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:32px;min-width:32px;padding:0 8px;cursor:pointer}
+.vbar button:disabled{opacity:.4;cursor:default}
+.vquote{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);max-height:96px;overflow:auto;background:var(--sunken)}
+.vquote[hidden]{display:none}
+.vbody{flex:1;min-height:0;overflow:auto;background:var(--sunken);padding:12px}
+.vpage{position:relative;margin:0 auto;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.vpage img{display:block;width:100%;max-width:none;height:auto}
+.hl{position:absolute;background:rgba(255,196,0,.38);mix-blend-mode:multiply;border-radius:2px;outline:1px solid rgba(214,150,0,.55)}
+.vnote{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-height:640px){ .vnote{display:none} .vquote{max-height:52px} .vbar{padding:6px 10px} }
+.srcbtn{cursor:pointer}
+blockquote.txt{cursor:pointer;border-radius:4px}
+blockquote.txt:hover{background:var(--sunken)}
+button.pg{border:0;cursor:pointer}
+button.pg:hover{background:var(--accent-soft);color:var(--accent)}
+.nameBtn{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;text-decoration:underline dotted;text-underline-offset:4px}
+
+@media (max-width:1100px){
+  .app{grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(560px,70vh) auto;height:auto}
+  .right{grid-column:1/-1}
+}
+@media (max-width:720px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  .left .scroll{max-height:300px}
+  svg#g{min-height:440px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>ใครพูดถึงใคร ในคำวินิจฉัย กกต. ที่ ๑๕๒๖/๒๕๖๙</h1>
+    <span class="sub">การเลือกสมาชิกวุฒิสภา พ.ศ. ๒๕๖๗ · ผู้ถูกร้อง ๔๒๗ ราย · ถอดจากเอกสาร ๑๑๔ หน้า</span>
+  </header>
+
+  <aside class="pane left">
+    <div class="tabs" role="tablist" aria-label="เลือกรายการ">
+      <button role="tab" id="tab-sec" aria-selected="true" aria-controls="panel-sec">ประเด็นที่พิจารณา</button>
+      <button role="tab" id="tab-ppl" aria-selected="false" aria-controls="panel-ppl">รายชื่อบุคคล</button>
+    </div>
+    <div class="tabpanel" id="panel-sec" role="tabpanel" aria-labelledby="tab-sec">
+      <div class="pane-h">
+        <input type="search" id="secq" placeholder="ค้นหาประเด็น เช่น ภูเก็ต, ลำดับที่ ๑๘" aria-label="ค้นหาประเด็น">
+      </div>
+      <nav class="scroll toc" id="toc" aria-label="รายการประเด็น"></nav>
+    </div>
+    <div class="tabpanel" id="panel-ppl" role="tabpanel" aria-labelledby="tab-ppl" hidden>
+      <div class="pane-h">
+        <input type="search" id="pplq" placeholder="ค้นหาชื่อ หรือเลขผู้ถูกร้อง เช่น ๒๑๒" aria-label="ค้นหาบุคคล">
+        <div class="pplbar">
+          <select id="ppltype" aria-label="ประเภทบุคคล">
+            <option value="">ทุกประเภท</option><option value="R">ผู้ถูกร้อง</option><option value="witness">พยาน</option>
+            <option value="person">บุคคลอื่น</option><option value="org">องค์กร/กลุ่ม</option>
+          </select>
+          <select id="pplsort" aria-label="เรียงตาม">
+            <option value="tot">เรียงตามจำนวนรายการ</option><option value="out">พูดถึงผู้อื่นมากสุด</option>
+            <option value="in">ถูกพูดถึงมากสุด</option><option value="num">เลขผู้ถูกร้อง</option>
+          </select>
+        </div>
+        <span class="pplnote" id="pplnote"></span>
+      </div>
+      <div class="scroll ppl" id="ppl" aria-label="รายชื่อบุคคล"></div>
+    </div>
+  </aside>
+
+  <main class="pane graph-pane">
+    <div class="secinfo" id="secinfo"></div>
+    <div class="pane-h" style="border-top:0">
+      <div class="toolbar" id="kinds" role="group" aria-label="ประเภทความเชื่อมโยง"></div>
+      <div class="toolbar">
+        <input type="search" id="nodeq" placeholder="หาบุคคล: ชื่อ หรือเลขผู้ถูกร้อง เช่น ๒๐๕" aria-label="ค้นหาบุคคล" style="max-width:340px">
+        <label class="chip" style="cursor:pointer"><input type="checkbox" id="labels" checked style="margin:0"> แสดงชื่อ</label>
+      </div>
+    </div>
+    <svg id="g" role="img" aria-label="กราฟความเชื่อมโยงระหว่างบุคคล"></svg>
+    <div class="empty" id="empty" hidden>ไม่มีความเชื่อมโยงในตัวกรองนี้</div>
+    <div class="legend" id="legend"></div>
+    <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button></div>
+  </main>
+
+  <aside class="pane right">
+    <div class="pane-h"><span class="label" id="dlabel">รายละเอียด</span></div>
+    <div class="scroll"><div class="detail" id="detail"></div></div>
+  </aside>
+</div>
+
+<aside class="viewer" id="viewer" hidden aria-label="เอกสารต้นฉบับ">
+  <div class="vbar">
+    <h4 id="vtitle">เอกสารต้นฉบับ</h4>
+    <button id="vprev" aria-label="หน้าก่อน">‹</button>
+    <button id="vnext" aria-label="หน้าถัดไป">›</button>
+    <button id="vzout" aria-label="ย่อ">−</button>
+    <button id="vzin" aria-label="ขยาย">+</button>
+    <button id="vclose" aria-label="ปิด">ปิด</button>
+  </div>
+  <div class="vquote" id="vquote" hidden></div>
+  <div class="vbody" id="vbody"><div class="vpage" id="vpage"><img id="vimg" alt=""></div></div>
+  <div class="vnote">ภาพสแกนจาก diagnose.pdf · แถบสีเหลืองคือข้อความที่อ้างถึง (หาตำแหน่งโดยจับคู่คำในข้อความกับกลุ่มคำในภาพสแกน)</div>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function(){
+const D = JSON.parse(document.getElementById('data').textContent);
+D.edges.forEach((e,i)=>e._i=i);
+(D.orders||[]).forEach((o,i)=>o._i=i);
+const RESP = new Map(D.respondents.map(r=>['R'+r.n, r]));
+const TH = s => String(s).replace(/[0-9]/g, d => '๐๑๒๓๔๕๖๗๘๙'[d]);
+const AR = s => String(s).replace(/[๐-๙]/g, d => '๐๑๒๓๔๕๖๗๘๙'.indexOf(d));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+const KINDS = [
+  ['testimony','ถ้อยคำพยาน'],['accusation','คำกล่าวหา'],['action','การกระทำ (โอนเงิน/สั่งการ)'],
+  ['defense','คำชี้แจง'],['finding','ผลวินิจฉัย กกต.'],['ruling','คำสั่ง']
+];
+const KIND_LABEL = Object.fromEntries(KINDS);
+const NODE_TYPES = [
+  ['politic','พรรค/ผู้ดำรงตำแหน่งการเมือง'],['national','ผู้มีสิทธิเลือกระดับประเทศ'],['province','ผู้มีสิทธิเลือกระดับจังหวัด'],
+  ['district','ผู้สมัครระดับอำเภอ'],['unknown','ผู้ถูกร้อง (ไม่ระบุสถานะ)'],['witness','พยาน'],['person','บุคคลอื่น'],['org','องค์กร/หน่วยงาน'],['group','กลุ่มผู้ถูกร้อง']
+];
+
+/* ---------- index data ---------- */
+const ent = new Map();
+D.respondents.forEach(r => ent.set('R'+r.n, {id:'R'+r.n, label:r.name, num:r.n, role:r.role, type:r.cls}));
+D.entities.forEach(e => { if(!ent.has(e.id)) ent.set(e.id, Object.assign({}, e)); });
+D.edges.forEach(e => { [e.from,e.to].forEach(id => { if(!ent.has(id)) ent.set(id,{id,label:id.replace(/^[A-Z]:/,''),type:id.startsWith('W:')?'witness':id.startsWith('O:')?'org':'person'}); }); });
+const secs = new Map(D.sections.map(s => [s.id, s]));
+const children = new Map();
+D.sections.forEach(s => { if(s.parent){ if(!children.has(s.parent)) children.set(s.parent,[]); children.get(s.parent).push(s.id); } });
+const descendants = id => { const out=[id]; (children.get(id)||[]).forEach(c => out.push(...descendants(c))); return out; };
+const ordersBySec = new Map();
+(D.orders||[]).forEach(o => { if(!ordersBySec.has(o.section)) ordersBySec.set(o.section,[]); ordersBySec.get(o.section).push(o); });
+/* ---------- outcome of each case (all text verbatim from the document) ---------- */
+const CONCL = /กรณีจึงมีหลักฐานอันควรเชื่อได้ว่า|ข้อเท็จจริงจึงรับฟังไม่ได้ว่า|ข้อเท็จจริงรับฟังไม่ได้ว่า/;
+const ORDER_TAGS = [
+  [/ศาลฎีกา/, 'sc', 'ยื่นศาลฎีกาให้เพิกถอนสิทธิ'],
+  [/ดำเนินคดีอาญา/, 'cr', 'ดำเนินคดีอาญา'],
+  [/ยกคำร้อง/, 'dm', 'ยกคำร้อง'],
+];
+function outcomeOwn(id){
+  const ids=descendants(id), set=new Set(ids);
+  const orders=ids.flatMap(x=>ordersBySec.get(x)||[]);
+  const seen=new Set();
+  const concl=D.edges.filter(e=>set.has(e.section) && e.kind==='finding' && CONCL.test(e.text) && !seen.has(e.text) && seen.add(e.text));
+  const tags=[];
+  ORDER_TAGS.forEach(([re,c,l])=>{ if(orders.some(o=>re.test(o.text))) tags.push([c,l]); });
+  if(!orders.length && concl.length){
+    if(concl.some(e=>/กรณีจึงมีหลักฐานอันควรเชื่อได้ว่า/.test(e.text))) tags.push(['ev','มีหลักฐานอันควรเชื่อ']);
+    if(concl.some(e=>/รับฟังไม่ได้ว่า/.test(e.text))) tags.push(['nf','ข้อเท็จจริงรับฟังไม่ได้']);
+  }
+  return {id, orders, concl, tags};
+}
+function outcomeFor(id){
+  const own=outcomeOwn(id);
+  if(own.orders.length || own.concl.length) return own;
+  // no decision of its own: look to the case it belongs to
+  let p=secs.get(id)&&secs.get(id).parent;
+  while(p){ const o=outcomeOwn(p); if(o.orders.length||o.concl.length) return Object.assign(o,{via:'parent'}); p=secs.get(p).parent; }
+  if(/^a12-/.test(id) && id!=='a12-ruling' && secs.has('a12-ruling')) return Object.assign(outcomeOwn('a12-ruling'),{via:'a12'});
+  return Object.assign(own,{via:'none'});
+}
+const tagHTML = tags => tags.length?`<div class="otags">${tags.map(([c,l])=>`<span class="otag ${c}">${l}</span>`).join('')}</div>`:'';
+function outcomeHTML(id){
+  const o=outcomeFor(id);
+  let note='';
+  if(o.via==='parent' || o.via==='a12') note=`<div class="note">ประเด็นนี้ไม่มีคำสั่งแยก · ผลการพิจารณาอยู่ใน <button data-sec="${esc(o.id)}">${esc(secTitle(o.id))}</button></div>`;
+  if(o.via==='none') return `<div class="outcome"><h4>ผลการพิจารณา</h4><div class="note">${
+    /^(intro|a37-intro)/.test(id) ? 'ส่วนนี้เป็นคำร้องรวมหรือหลักการพิจารณา ผลการพิจารณาอยู่ในแต่ละกรณี เลือกกรณีจากรายการด้านซ้าย' : 'ไม่พบคำสั่งหรือข้อสรุปของ กกต. ที่แยกไว้สำหรับประเด็นนี้ในข้อมูลที่ถอดไว้'}</div></div>`;
+  const ord=o.orders.map(x=>`<div class="item"><button class="pg" data-o="${x._i}" title="เปิดในเอกสารต้นฉบับ">หน้า ${TH(x.page)}</button><span class="q" data-o="${x._i}">“${esc(x.text)}”</span></div>`);
+  const con=o.concl.map(e=>`<div class="item"><button class="pg" data-e="${e._i}" title="เปิดในเอกสารต้นฉบับ">หน้า ${TH(e.page)}</button><span class="q" data-e="${e._i}" tabindex="0">“${esc(e.text)}”</span></div>`);
+  const block=(title,arr,n)=>!arr.length?'':`<div class="sub">${title} · ${TH(arr.length)} รายการ</div>${arr.slice(0,n).join('')}${arr.length>n?`<div hidden style="display:contents">${arr.slice(n).join('')}</div><button class="more">แสดงอีก ${TH(arr.length-n)} รายการ</button>`:''}`;
+  return `<div class="outcome"><h4>ผลการพิจารณา</h4>${tagHTML(o.tags)}${note}
+    ${block('คำสั่งของ กกต.', ord, 8)}${block('ข้อสรุปจากการวินิจฉัย', con, o.orders.length?3:6)}</div>`;
+}
+const hashOf = id => id === '*' ? 'all' : 's-' + id.replace(/[^A-Za-z0-9]+/g,'-');
+const idByHash = new Map(D.sections.map(s => [hashOf(s.id), s.id])); idByHash.set('all','*');
+
+const edgeCount = new Map();
+D.edges.forEach(e => edgeCount.set(e.section,(edgeCount.get(e.section)||0)+1));
+const totalCount = id => descendants(id).reduce((a,s)=>a+(edgeCount.get(s)||0),0);
+
+/* ---------- state ---------- */
+const state = { sec:'*', kinds:new Set(KINDS.map(k=>k[0]).filter(k=>k!=='ruling')), sel:null, labels:true, dir:'all' };
+
+/* ---------- table of contents ---------- */
+const toc = document.getElementById('toc');
+function renderToc(){
+  toc.innerHTML='';
+  const all = document.createElement('button');
+  all.className='sec'; all.dataset.id='*';
+  all.innerHTML = `<span class="t">ทุกประเด็น</span><span class="n">${TH(D.edges.length)}</span>`;
+  toc.appendChild(all);
+  D.categories.forEach(cat => {
+    const box=document.createElement('div'); box.className='cat';
+    const h=document.createElement('button'); h.className='cat-h'; h.setAttribute('aria-expanded','true');
+    h.innerHTML=`<span class="chev">▼</span><span>${cat.title}</span>`;
+    h.onclick=()=>{box.classList.toggle('closed'); h.setAttribute('aria-expanded', !box.classList.contains('closed'));};
+    const items=document.createElement('div'); items.className='items';
+    cat.ids.forEach(id => {
+      const add=(sid,child)=>{
+        const s=secs.get(sid); if(!s) return;
+        const b=document.createElement('button'); b.className='sec'+(child?' child':''); b.dataset.id=sid;
+        const tg=outcomeOwn(sid).tags;
+        b.innerHTML=`<span class="tt"><span class="t">${s.title}</span>${tagHTML(tg)}</span><span class="n">${TH(totalCount(sid))}</span>`;
+        items.appendChild(b);
+        (children.get(sid)||[]).forEach(c=>add(c,true));
+      };
+      add(id,false);
+    });
+    box.append(h,items); toc.appendChild(box);
+  });
+  toc.querySelectorAll('.sec').forEach(b => b.onclick = () => go(b.dataset.id));
+}
+document.getElementById('secq').addEventListener('input', e => {
+  const q = AR(e.target.value.trim()).toLowerCase();
+  toc.querySelectorAll('.sec').forEach(b => {
+    const t = AR(b.querySelector('.t').textContent).toLowerCase();
+    b.classList.toggle('hidden', q && !t.includes(q));
+  });
+  if(q) toc.querySelectorAll('.cat').forEach(c=>c.classList.remove('closed'));
+});
+
+/* ---------- kind chips + legend ---------- */
+const kindsEl=document.getElementById('kinds');
+KINDS.forEach(([k,l])=>{
+  const b=document.createElement('button'); b.className='chip'; b.dataset.k=k;
+  b.setAttribute('aria-pressed', state.kinds.has(k));
+  b.innerHTML=`<span class="sw" style="background:var(--k-${k})"></span>${l}`;
+  b.onclick=()=>{ state.kinds.has(k)?state.kinds.delete(k):state.kinds.add(k); b.setAttribute('aria-pressed',state.kinds.has(k)); draw(); };
+  kindsEl.appendChild(b);
+});
+document.getElementById('legend').innerHTML = NODE_TYPES.map(([t,l]) =>
+  t==='witness' ? `<span><i style="border:2px solid var(--n-witness);background:var(--surface)"></i>${l}</span>`
+  : t==='org' ? `<span><i style="border-radius:2px;background:var(--n-org)"></i>${l}</span>`
+  : `<span><i style="background:var(--n-${t})"></i>${l}</span>`).join('');
+document.getElementById('labels').onchange = e => { state.labels=e.target.checked; gLabels.style('display', state.labels?null:'none'); };
+
+/* ---------- graph ---------- */
+const svg=d3.select('#g'); const root=svg.append('g');
+const defs=svg.append('defs');
+KINDS.forEach(([k])=>defs.append('marker').attr('id','m-'+k).attr('viewBox','0 -4 8 8').attr('refX',8).attr('refY',0)
+  .attr('markerWidth',7).attr('markerHeight',7).attr('orient','auto').append('path').attr('d','M0,-4L8,0L0,4').attr('fill',`var(--k-${k})`));
+const gLinks=root.append('g'), gNodes=root.append('g'), gLabels=root.append('g');
+const zoom=d3.zoom().scaleExtent([0.15,6]).on('zoom',e=>root.attr('transform',e.transform));
+svg.call(zoom).on('dblclick.zoom',null);
+document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.4);
+document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,1/1.4);
+document.getElementById('zfit').onclick=()=>fit(true);
+let sim=null, curNodes=[], curLinks=[];
+
+function filteredEdges(){
+  const ids = state.sec==='*' ? null : new Set(descendants(state.sec));
+  return D.edges.filter(e => (!ids || ids.has(e.section)) && state.kinds.has(e.kind));
+}
+const PRI=['ruling','finding','action','accusation','testimony','defense'];
+function draw(){
+  const E=filteredEdges();
+  renderPeople(E);
+  const pairs=new Map(), deg=new Map(), selfIds=new Set();
+  E.forEach(e=>{
+    if(e.from===e.to){ selfIds.add(e.from); deg.set(e.from,(deg.get(e.from)||0)+1); return; }
+    const key=e.from+'\u0001'+e.to;
+    if(!pairs.has(key)) pairs.set(key,{source:e.from,target:e.to,items:[]});
+    pairs.get(key).items.push(e);
+    deg.set(e.from,(deg.get(e.from)||0)+1); deg.set(e.to,(deg.get(e.to)||0)+1);
+  });
+  const old=new Map(curNodes.map(n=>[n.id,n]));
+  curNodes=[...deg.keys()].map(id=>{const o=old.get(id); const e=ent.get(id);
+    return Object.assign(o||{x:(Math.random()-.5)*300,y:(Math.random()-.5)*300},{id,deg:deg.get(id),self:selfIds.has(id),type:e.type,label:e.label,num:e.num});});
+  curLinks=[...pairs.values()].map(p=>{p.kind=PRI.find(k=>p.items.some(i=>i.kind===k)); return p;});
+  document.getElementById('empty').hidden = curNodes.length>0;
+
+  const big = curNodes.length>350;
+  const r = d => Math.min(4+Math.sqrt(d.deg)*2.2, 22);
+  const link=gLinks.selectAll('path').data(curLinks,d=>d.source.id?d.source.id+'>'+d.target.id:d.source+'>'+d.target);
+  link.exit().remove();
+  const linkE=link.enter().append('path').attr('class','link').on('click',(ev,d)=>{ev.stopPropagation(); showPair(d);});
+  linkE.append('title');
+  const linkAll=linkE.merge(link)
+    .attr('stroke',d=>`var(--k-${d.kind})`).attr('stroke-opacity',big?.35:.6)
+    .attr('stroke-width',d=>Math.min(1+Math.log2(d.items.length)*1.2,5))
+    .attr('marker-end',d=>`url(#m-${d.kind})`);
+  linkAll.select('title').text(d=>`${d.items.length} รายการ`);
+
+  const node=gNodes.selectAll('g.node').data(curNodes,d=>d.id);
+  node.exit().remove();
+  const nodeE=node.enter().append('g').attr('class',d=>'node '+d.type)
+    .on('click',(ev,d)=>{ev.stopPropagation(); select(d.id);})
+    .call(d3.drag().on('start',(ev,d)=>{if(!ev.active)sim.alphaTarget(.2).restart(); d.fx=d.x; d.fy=d.y;})
+      .on('drag',(ev,d)=>{d.fx=ev.x; d.fy=ev.y;}).on('end',(ev,d)=>{if(!ev.active)sim.alphaTarget(0); d.fx=null; d.fy=null;}));
+  nodeE.each(function(d){ const g=d3.select(this);
+    if(d.type==='org'||d.type==='group') g.append('rect'); else g.append('circle');
+    g.append('title'); });
+  const nodeAll=nodeE.merge(node).classed('self',d=>d.self);
+  nodeAll.select('circle').attr('r',r).attr('fill',d=>`var(--n-${d.type})`).style('stroke',d=>d.type==='witness'?`var(--n-witness)`:null);
+  nodeAll.select('rect').attr('width',d=>r(d)*2).attr('height',d=>r(d)*2).attr('x',d=>-r(d)).attr('y',d=>-r(d)).attr('rx',2).attr('fill',d=>`var(--n-${d.type})`);
+  nodeAll.select('title').text(d=>nameOf(d.id));
+
+  const showLabel = d => !big || d.deg>=6 || d.type==='org';
+  const lab=gLabels.selectAll('g').data(curNodes.filter(showLabel),d=>d.id);
+  lab.exit().remove();
+  const labE=lab.enter().append('g').attr('class','node');
+  labE.append('text').attr('dy','0.32em');
+  labE.merge(lab).select('text').attr('x',d=>r(d)+4).text(d=>shortName(d.id));
+  gLabels.style('display', state.labels?null:'none');
+
+  if(sim) sim.stop();
+  sim=d3.forceSimulation(curNodes)
+    .force('link',d3.forceLink(curLinks).id(d=>d.id).distance(big?45:95).strength(.35))
+    .force('charge',d3.forceManyBody().strength(big?-45:-320))
+    .force('collide',d3.forceCollide(d=>r(d)+3))
+    .force('x',d3.forceX().strength(.04)).force('y',d3.forceY().strength(.04))
+    .on('tick',()=>{
+      linkAll.attr('d',d=>{const dx=d.target.x-d.source.x, dy=d.target.y-d.source.y, L=Math.hypot(dx,dy)||1, tr=r(d.target)+2;
+        return `M${d.source.x},${d.source.y}L${d.target.x-dx/L*tr},${d.target.y-dy/L*tr}`;});
+      gNodes.selectAll('g.node').attr('transform',d=>`translate(${d.x},${d.y})`);
+      gLabels.selectAll('g').attr('transform',d=>`translate(${d.x},${d.y})`);
+    });
+  sim.on('end',()=>fit(true));
+  sim.alpha(1).restart();
+  setTimeout(()=>fit(false), big?1400:700);
+  highlight();
+}
+function fit(anim){
+  if(!curNodes.length) return;
+  const box=svg.node().getBoundingClientRect();
+  const xs=curNodes.map(n=>n.x), ys=curNodes.map(n=>n.y);
+  const x0=Math.min(...xs)-40,x1=Math.max(...xs)+120,y0=Math.min(...ys)-40,y1=Math.max(...ys)+40;
+  const k=Math.min(2.2, Math.min(box.width/(x1-x0), box.height/(y1-y0)));
+  const t=d3.zoomIdentity.translate(box.width/2-k*(x0+x1)/2, box.height/2-k*(y0+y1)/2).scale(k);
+  (anim?svg.transition().duration(500):svg).call(zoom.transform,t);
+}
+svg.on('click',()=>{ state.sel=null; highlight(); markPeople(); showSection(); });
+
+function highlight(){
+  const s=state.sel;
+  if(!s || !curNodes.some(n=>n.id===s)){ gNodes.selectAll('g.node').classed('dim',false).classed('sel',false); gLinks.selectAll('path').classed('dim',false); gLabels.selectAll('g').classed('dim',false); return; }
+  const nb=new Set([s]); curLinks.forEach(l=>{ if(l.source.id===s) nb.add(l.target.id); if(l.target.id===s) nb.add(l.source.id); });
+  gNodes.selectAll('g.node').classed('dim',d=>!nb.has(d.id)).classed('sel',d=>d.id===s);
+  gLabels.selectAll('g').classed('dim',d=>!nb.has(d.id));
+  gLinks.selectAll('path').classed('dim',l=>l.source.id!==s && l.target.id!==s);
+}
+
+/* ---------- names ---------- */
+function nameOf(id){ const e=ent.get(id); if(!e) return id;
+  return e.num ? `${e.label} (ผู้ถูกร้องที่ ${TH(e.num)})` : e.label; }
+function shortName(id){ const e=ent.get(id); if(!e) return id;
+  const nm=e.label.replace(/^(นางสาว|นาย|นาง|พลตำรวจ\S*|พลเอก|พลโท|พลตรี|พันตำรวจ\S*|ร้อยตำรวจ\S*|พันเอก|ว่าที่\S*)\s*/,'');
+  return e.num ? `${TH(e.num)} ${nm}` : nm; }
+function roleOf(id){ const e=ent.get(id); if(!e) return '';
+  if(e.role) return e.role; const t=NODE_TYPES.find(x=>x[0]===e.type); return (t?t[1]:'') + (e.note?` · ${e.note}`:''); }
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const secTitle = id => { const s=secs.get(id); if(!s) return id; const p=s.parent&&secs.get(s.parent); return p? `${p.title} › ${s.title}` : s.title; };
+
+/* ---------- source viewer ---------- */
+const V = { el:document.getElementById('viewer'), img:document.getElementById('vimg'), page:document.getElementById('vpage'),
+  body:document.getElementById('vbody'), title:document.getElementById('vtitle'), quote:document.getElementById('vquote'),
+  p:1, hl:[], zoom:1, last:null };
+const PI = D.pageImg, NPAGES = PI.n;
+function renderViewer(scroll){
+  const p=V.p;
+  V.title.textContent = `diagnose.pdf · หน้า ${TH(p)} / ${TH(NPAGES)}`;
+  document.getElementById('vprev').disabled = p<=1;
+  document.getElementById('vnext').disabled = p>=NPAGES;
+  V.page.style.width = (100*V.zoom)+'%';
+  V.img.src = `pages/p${String(p).padStart(3,'0')}.jpg`;
+  V.img.alt = `หน้า ${TH(p)} ของเอกสาร`;
+  V.page.querySelectorAll('.hl').forEach(n=>n.remove());
+  const rects = V.hl.filter(h=>h[0]===p).flatMap(h=>h[1]);
+  rects.forEach(([a,y0,b,y1])=>{ const d=document.createElement('div'); d.className='hl';
+    Object.assign(d.style,{left:(a/PI.w*100)+'%',top:(y0/PI.h*100)+'%',width:((b-a)/PI.w*100)+'%',height:((y1-y0)/PI.h*100)+'%'});
+    V.page.appendChild(d); });
+  if(scroll){
+    const go=()=>{ const first=V.page.querySelector('.hl');
+      V.body.scrollTop = first ? Math.max(0, first.offsetTop - V.body.clientHeight*0.3) : 0; };
+    if(V.img.complete) requestAnimationFrame(go); else V.img.onload=()=>{ V.img.onload=null; go(); };
+  }
+}
+function openViewer(hl, quote, label){
+  if(!hl || !hl.length) return;
+  V.hl = hl; V.p = hl[0][0]; V.last = document.activeElement;
+  V.quote.hidden = !quote;
+  V.quote.innerHTML = quote ? `${label?`<b>${esc(label)}</b> · `:''}“${esc(quote)}”` : '';
+  V.el.hidden = false; renderViewer(true);
+  document.getElementById('vclose').focus({preventScroll:true});
+}
+function closeViewer(){ V.el.hidden=true; if(V.last && V.last.focus) V.last.focus({preventScroll:true}); }
+document.getElementById('vclose').onclick=closeViewer;
+document.getElementById('vprev').onclick=()=>{ if(V.p>1){ V.p--; renderViewer(true);} };
+document.getElementById('vnext').onclick=()=>{ if(V.p<NPAGES){ V.p++; renderViewer(true);} };
+document.getElementById('vzin').onclick=()=>{ V.zoom=Math.min(3,V.zoom*1.25); renderViewer(false); };
+document.getElementById('vzout').onclick=()=>{ V.zoom=Math.max(.6,V.zoom/1.25); renderViewer(false); };
+document.addEventListener('keydown',e=>{ if(!V.el.hidden && e.key==='Escape') closeViewer(); });
+const openEdge = e => openViewer(e.hl, e.text, `${shortName(e.from)} → ${shortName(e.to)} · หน้า ${TH(e.page)}`);
+function openPerson(id){
+  const r=RESP.get(id); if(!r||!r.hl) return false;
+  openViewer(r.hl, `${TH(r.n)}. ${r.name}${r.role?` — ${r.role}`:''}`, `รายชื่อผู้ถูกร้อง · หน้า ${TH(r.page)}`);
+  return true;
+}
+
+/* ---------- detail panel ---------- */
+const det=document.getElementById('detail'), dlabel=document.getElementById('dlabel');
+function stmtHTML(e, other, dirWord){
+  return `<div class="stmt" style="border-color:var(--k-${e.kind})">
+    <div class="who"><span class="badge" style="color:var(--k-${e.kind})">${KIND_LABEL[e.kind]}</span>
+      ${dirWord} <button data-node="${esc(other)}">${esc(shortName(other))}</button> ${e.verb?`· ${esc(e.verb)}`:''}</div>
+    <blockquote class="txt" data-e="${e._i}" title="เปิดหน้า ${TH(e.page)} ในเอกสารต้นฉบับ" tabindex="0">“${esc(e.text)}”</blockquote>
+    <div class="src"><button class="pg" data-e="${e._i}" title="เปิดในเอกสารต้นฉบับ">หน้า ${TH(e.page??'–')}</button> · <button data-sec="${esc(e.section)}">${esc(secTitle(e.section))}</button></div></div>`;
+}
+function bindDetail(){
+  det.querySelectorAll('[data-node]').forEach(b=>b.onclick=()=>{ const id=b.dataset.node; select(id); openPerson(id); });
+  det.querySelectorAll('[data-e]').forEach(b=>{ const fn=()=>openEdge(D.edges[+b.dataset.e]); b.onclick=fn;
+    b.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }; });
+  det.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{ const o=D.orders[+b.dataset.o]; openViewer(o.hl,o.text,`คำสั่ง · หน้า ${TH(o.page)}`); });
+  det.querySelectorAll('[data-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.person));
+  det.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>go(b.dataset.sec));
+  det.querySelectorAll('.more').forEach(b=>b.onclick=()=>{ b.previousElementSibling.hidden=false; b.remove(); });
+}
+function listBlock(title, arr, fn){
+  if(!arr.length) return '';
+  const head=arr.slice(0,25).map(fn).join(''), rest=arr.slice(25).map(fn).join('');
+  return `<div class="group-h"><b>${title}</b><span>${TH(arr.length)} รายการ</span></div>${head}
+    ${rest?`<div hidden style="display:contents">${rest}</div><button class="more">แสดงอีก ${TH(arr.length-25)} รายการ</button>`:''}`;
+}
+function select(id, dir){
+  state.dir = dir || (state.sel===id ? state.dir : 'all');
+  state.sel=id; highlight(); markPeople();
+  const ids = state.sec==='*'?null:new Set(descendants(state.sec));
+  const inScope = e => (!ids||ids.has(e.section)) && state.kinds.has(e.kind);
+  const all = D.edges.filter(e=>e.from===id||e.to===id);
+  const scoped = all.filter(inScope);
+  const out=scoped.filter(e=>e.from===id&&e.to!==id), inn=scoped.filter(e=>e.to===id&&e.from!==id), self=scoped.filter(e=>e.from===id&&e.to===id);
+  dlabel.textContent='บุคคล';
+  const rr=RESP.get(id);
+  const seg=[['all','ทั้งหมด',scoped.length],['out','พูดถึงใคร',out.length],['in','ใครพูดถึง',inn.length]]
+    .map(([k,l,n])=>`<button data-dir="${k}" aria-pressed="${state.dir===k}">${l} · ${TH(n)}</button>`).join('');
+  let body;
+  if(state.dir==='out') body = byPerson(out, e=>e.to, 'ถึง', 'ไม่พบว่าพูดถึงผู้อื่นในตัวกรองนี้');
+  else if(state.dir==='in') body = byPerson(inn, e=>e.from, 'จาก', 'ไม่พบว่ามีผู้อื่นพูดถึงในตัวกรองนี้');
+  else body = `${listBlock('ชี้แจงเกี่ยวกับตนเอง', self, e=>stmtHTML(e,id,'โดย'))}
+    ${listBlock('ถูกกล่าวถึงโดย', inn, e=>stmtHTML(e,e.from,'จาก'))}
+    ${listBlock('พูดถึง / กระทำต่อ', out, e=>stmtHTML(e,e.to,'ถึง'))}
+    ${!scoped.length?'<div class="hint">ไม่มีรายการในตัวกรองปัจจุบัน</div>':''}`;
+  det.innerHTML=`<div><h3>${rr&&rr.hl?`<button class="nameBtn" data-person="${esc(id)}" title="เปิดรายชื่อในเอกสาร หน้า ${TH(rr.page)}">${esc(nameOf(id))}</button>`:esc(nameOf(id))}</h3>
+    <div class="role">${esc(roleOf(id))}${rr&&rr.hl?` · <button class="pg" data-person="${esc(id)}">รายชื่อ หน้า ${TH(rr.page)}</button>`:''}</div></div>
+    <div class="seg" role="group" aria-label="เลือกมุมมอง">${seg}</div>
+    ${state.sec!=='*' && all.length>scoped.length ? `<div class="hint">แสดงเฉพาะในประเด็นที่เลือก · ในเอกสารทั้งหมดมี ${TH(all.length)} รายการ <button class="more" id="allsec">ดูทุกประเด็น</button></div>`:''}
+    ${body}`;
+  det.querySelectorAll('.seg [data-dir]').forEach(b=>b.onclick=()=>select(id, b.dataset.dir));
+  const a=document.getElementById('allsec'); if(a) a.onclick=()=>{ const d=state.dir; go('*'); select(id, d); };
+  bindDetail();
+  det.parentElement.scrollTop=0;
+}
+/* statements grouped by the other person: who said what about whom */
+function byPerson(arr, key, word, emptyMsg){
+  if(!arr.length) return `<div class="hint">${emptyMsg}</div>`;
+  const g=new Map(); arr.forEach(e=>{ const k=key(e); if(!g.has(k)) g.set(k,[]); g.get(k).push(e); });
+  const groups=[...g.entries()].sort((a,b)=>b[1].length-a[1].length);
+  const one=([p,items])=>`<div class="pgrp"><div class="group-h"><b>${word} <button data-node="${esc(p)}">${esc(shortName(p))}</button></b><span>${TH(items.length)} รายการ</span></div>
+    ${items.map(e=>stmtHTML(e,p,word)).join('')}</div>`;
+  const head=groups.slice(0,10).map(one).join(''), rest=groups.slice(10).map(one).join('');
+  return `<div class="hint">${TH(groups.length)} คน · ${TH(arr.length)} รายการ · เรียงจากคนที่มีรายการมากที่สุด</div>${head}
+    ${rest?`<div hidden style="display:contents">${rest}</div><button class="more">แสดงอีก ${TH(groups.length-10)} คน</button>`:''}`;
+}
+function showPair(p){
+  const a=p.source.id, b=p.target.id;
+  const back = curLinks.find(l=>l.source.id===b&&l.target.id===a);
+  const items=[...p.items, ...(back?back.items:[])];
+  dlabel.textContent='ความเชื่อมโยง';
+  det.innerHTML=`<div><h3>${esc(shortName(a))} ↔ ${esc(shortName(b))}</h3><div class="role">${TH(items.length)} รายการในตัวกรองนี้ · คลิกข้อความเพื่อเปิดหน้าในเอกสาร</div></div>
+    ${items.map(e=>stmtHTML(e, e.from, '')).join('')}`;
+  bindDetail();
+  if(items.length) openEdge(items[0]);
+}
+function overallOutcome(){
+  const tops=D.categories.flatMap(c=>c.ids), cnt=new Map(ORDER_TAGS.map(t=>[t[2],0]));
+  tops.forEach(t=>outcomeOwn(t).tags.forEach(([c,l])=>{ if(cnt.has(l)) cnt.set(l,cnt.get(l)+1); }));
+  return `<div class="outcome"><h4>ผลการพิจารณา</h4><div class="note">จาก ${TH(tops.length)} ประเด็นในรายการด้านซ้าย มีคำสั่งของ กกต. ดังนี้ (หนึ่งประเด็นอาจมีคำสั่งหลายแบบ) · เลือกประเด็นเพื่อดูคำสั่งและข้อสรุปตามต้นฉบับ</div>
+    <div class="otags">${ORDER_TAGS.map(([re,c,l])=>`<span class="otag ${c}">${l} · ${TH(cnt.get(l))} ประเด็น</span>`).join('')}</div></div>`;
+}
+function showSection(){
+  const id=state.sec, s=secs.get(id);
+  const E=filteredEdges();
+  const people=new Set(); E.forEach(e=>{people.add(e.from);people.add(e.to);});
+  const resp=[...people].filter(x=>x.startsWith('R')).length, wit=[...people].filter(x=>x.startsWith('W:')).length;
+  const top=[...people].map(p=>[p,E.filter(e=>e.to===p&&e.from!==p).length]).sort((a,b)=>b[1]-a[1]).slice(0,8).filter(x=>x[1]>0);
+  dlabel.textContent='ภาพรวมประเด็น';
+  det.innerHTML=`
+    <div class="stats"><div><b>${TH(E.length)}</b><span>ความเชื่อมโยง</span></div><div><b>${TH(resp)}</b><span>ผู้ถูกร้อง</span></div><div><b>${TH(wit)}</b><span>พยาน</span></div></div>
+    ${id==='*' ? overallOutcome() : outcomeHTML(id)}
+    ${top.length?`<div class="group-h"><b>ถูกกล่าวถึงมากที่สุด</b><span>ในตัวกรองนี้</span></div>
+      <div class="stmt" style="border-color:var(--line)">${top.map(([p,c])=>`<div class="who"><button data-node="${esc(p)}">${esc(shortName(p))}</button> · ${TH(c)} รายการ</div>`).join('')}</div>`:''}
+    <div class="hint">คลิกจุดในกราฟเพื่อดูว่าบุคคลนั้นพูดถึงใคร และถูกใครกล่าวถึงว่าอย่างไร · คลิกเส้นเพื่อดูข้อความระหว่างสองคน</div>`;
+  bindDetail();
+}
+function renderSecInfo(){
+  const el=document.getElementById('secinfo');
+  if(state.sec==='*'){ el.innerHTML=`<h2>ทุกประเด็น</h2>${D.overview?`<p>“${esc(D.overview)}” <button class="pg" id="srcpg">หน้า ${TH(D.overviewPage)}</button></p>`:''}<span class="meta">ข้อความทุกประโยคคัดจากเอกสารตามต้นฉบับ · คลิกเส้น ข้อความ หรือป้ายเลขหน้า เพื่อเปิดหน้านั้นใน PDF พร้อมไฮไลต์ · ค่าเริ่มต้นซ่อน “คำสั่ง”</span>`;
+    const b=document.getElementById('srcpg'); if(b) b.onclick=()=>openViewer(D.overviewHl,D.overview,`หน้า ${TH(D.overviewPage)}`); return; }
+  const s=secs.get(state.sec);
+  const oc=outcomeFor(state.sec);
+  el.innerHTML=`<h2>${esc(secTitle(state.sec))}</h2>${oc.tags.length?`<div class="otags">${tagHTML(oc.tags).replace(/^<div class="otags">|<\/div>$/g,'')}<button class="more" id="gooutcome" style="padding:0 8px;font-size:12px">ดูผลการพิจารณา</button></div>`:''}${s.summary?`<p>“${esc(s.summary)}” <button class="pg" id="srcpg">หน้า ${TH(s.summaryPage)}</button></p>`:''}<span class="meta">${s.pages?`อยู่ในหน้า ${TH(s.pages.join('–'))} ของ PDF`:''}</span>`;
+  const b=document.getElementById('srcpg'); if(b) b.onclick=()=>openViewer(s.summaryHl,s.summary,`หน้า ${TH(s.summaryPage)}`);
+  const g=document.getElementById('gooutcome'); if(g) g.onclick=()=>{ if(state.sel){ state.sel=null; highlight(); markPeople(); showSection(); }
+    const box=document.querySelector('#detail .outcome'); if(box){ det.parentElement.scrollTop=0; box.scrollIntoView({behavior:'smooth',block:'start'}); } };
+}
+
+/* ---------- people list ---------- */
+const pplEl=document.getElementById('ppl'), pplq=document.getElementById('pplq'), ppltype=document.getElementById('ppltype'), pplsort=document.getElementById('pplsort');
+let pplRows=[];
+function renderPeople(E){
+  const c=new Map(); const get=id=>{ if(!c.has(id)) c.set(id,{id,out:0,inn:0,self:0}); return c.get(id); };
+  E.forEach(e=>{ if(e.from===e.to){ get(e.from).self++; return; } get(e.from).out++; get(e.to).inn++; });
+  pplRows=[...c.values()];
+  listPeople();
+}
+function typeKey(id){ if(id.startsWith('R')) return 'R'; const t=(ent.get(id)||{}).type; return t==='group'?'org':t; }
+function listPeople(){
+  const q=AR(pplq.value.trim()).toLowerCase(), t=ppltype.value, srt=pplsort.value;
+  const rows=pplRows.filter(r=>{
+    if(t && typeKey(r.id)!==t) return false;
+    if(!q) return true;
+    const e=ent.get(r.id)||{}; return AR(`${e.label||r.id} ${e.num??''} ${roleOf(r.id)}`).toLowerCase().includes(q);
+  });
+  const num=id=>(ent.get(id)||{}).num ?? 1e9;
+  rows.sort(srt==='out'?(a,b)=>b.out-a.out||b.inn-a.inn : srt==='in'?(a,b)=>b.inn-a.inn||b.out-a.out
+    : srt==='num'?(a,b)=>num(a.id)-num(b.id)||a.id.localeCompare(b.id) : (a,b)=>(b.out+b.inn+b.self)-(a.out+a.inn+a.self));
+  document.getElementById('pplnote').textContent = `${TH(rows.length)} คน${state.sec==='*'?'':' ในประเด็นที่เลือก'} · กดปุ่มเพื่อดูว่าพูดถึงใคร หรือใครพูดถึง`;
+  const shown=rows.slice(0,300);
+  pplEl.innerHTML = shown.map(r=>`<div class="prow${r.id===state.sel?' on':''}" data-id="${esc(r.id)}">
+      <button class="pname" data-pick="${esc(r.id)}">${esc(shortName(r.id))}<small>${esc(roleOf(r.id))}</small></button>
+      <div class="pdir"><button data-pick="${esc(r.id)}" data-d="out" ${r.out?'':'disabled'}>พูดถึง ${TH(r.out)}</button><button data-pick="${esc(r.id)}" data-d="in" ${r.inn?'':'disabled'}>ถูกพูดถึง ${TH(r.inn)}</button></div>
+    </div>`).join('') + (rows.length>shown.length?`<div class="hint" style="padding:8px">แสดง ${TH(shown.length)} จาก ${TH(rows.length)} คน · พิมพ์ค้นหาเพื่อหาคนอื่น</div>`:'')
+    + (!rows.length?'<div class="hint" style="padding:8px">ไม่พบบุคคลในตัวกรองนี้</div>':'');
+  pplEl.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.pick; select(id, b.dataset.d||'all');
+    const n=curNodes.find(n=>n.id===id);
+    if(n){ const box=svg.node().getBoundingClientRect(); svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(box.width/2-1.4*n.x, box.height/2-1.4*n.y).scale(1.4)); }
+  });
+}
+function markPeople(){ pplEl.querySelectorAll('.prow').forEach(r=>r.classList.toggle('on', r.dataset.id===state.sel)); }
+pplq.addEventListener('input', listPeople); ppltype.onchange=listPeople; pplsort.onchange=listPeople;
+const tabs=[['tab-sec','panel-sec'],['tab-ppl','panel-ppl']];
+tabs.forEach(([t,p])=>document.getElementById(t).onclick=()=>tabs.forEach(([t2,p2])=>{
+  document.getElementById(t2).setAttribute('aria-selected', t2===t); document.getElementById(p2).hidden = p2!==p; }));
+
+/* ---------- node search ---------- */
+document.getElementById('nodeq').addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const q=AR(e.target.value.trim()); if(!q) return;
+  let id = /^\d+$/.test(q) ? 'R'+q : null;
+  if(!id || !ent.has(id)){ const hit=[...ent.values()].find(x=>AR(x.label).includes(q)); id=hit&&hit.id; }
+  if(!id){ e.target.setCustomValidity('ไม่พบชื่อนี้'); e.target.reportValidity(); setTimeout(()=>e.target.setCustomValidity(''),1500); return; }
+  if(!curNodes.some(n=>n.id===id)) go('*');
+  select(id);
+  const n=curNodes.find(n=>n.id===id);
+  if(n){ const box=svg.node().getBoundingClientRect(); svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(box.width/2-1.6*n.x, box.height/2-1.6*n.y).scale(1.6)); }
+});
+
+/* ---------- routing ---------- */
+function go(id, fromHash){
+  state.sec=id; state.sel=null;
+  toc.querySelectorAll('.sec').forEach(b=>b.setAttribute('aria-current', b.dataset.id===id));
+  if(!fromHash){ const h=hashOf(id); if(location.hash.slice(1)!==h) history.replaceState(null,'','#'+h); }
+  renderSecInfo(); draw(); showSection();
+}
+window.addEventListener('hashchange',()=>{ const id=idByHash.get(location.hash.slice(1)); if(id&&id!==state.sec) go(id,true); });
+renderToc();
+const start=idByHash.get(location.hash.slice(1)) || D.defaultSection || '*';
+go(start,true);
+})();
+</script>

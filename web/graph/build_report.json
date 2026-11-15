@@ -1,0 +1,26 @@
+{
+ "stats": {
+  "edge_ok": 2912,
+  "edge_bad": 0,
+  "page_fixed": 0,
+  "sum_ok": 189,
+  "sum_bad": 0,
+  "ord_ok": 132,
+  "ord_bad": 0
+ },
+ "edges": 2901,
+ "kinds": {
+  "accusation": 777,
+  "finding": 821,
+  "action": 265,
+  "testimony": 702,
+  "defense": 161,
+  "ruling": 175
+ },
+ "sections": 189,
+ "entities": 286,
+ "orders": 132,
+ "bytes": 3269243,
+ "bad_samples": [],
+ "bad_by_section": {}
+}
