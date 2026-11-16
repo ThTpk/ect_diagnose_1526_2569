@@ -81,6 +81,13 @@ svg#g:active{cursor:grabbing}
 .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .zoombtns{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
 .zoombtns button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;font-size:16px}
+.zoombtns button.wide{width:auto;padding:0 10px;font-size:13px;font-weight:600}
+.zoombtns button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+/* full screen: the graph takes the whole window, the detail panel stays beside it */
+.app.gfull{grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:minmax(0,1fr);height:100vh;height:100dvh;padding-block:8px}
+.app.gfull>header,.app.gfull>.left{display:none}
+.app.gfull>.right{grid-column:auto}
+@media (max-width:900px){ .app.gfull{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 34vh} .app.gfull>.right{grid-column:1} }
 .empty{position:absolute;inset:auto 0 45% 0;text-align:center;color:var(--faint)}
 
 .node circle,.node rect{stroke:var(--surface);stroke-width:1.5px;cursor:pointer}
@@ -257,7 +264,7 @@ button.pg:hover{background:var(--accent-soft);color:var(--accent)}
     <svg id="g" role="img" aria-label="กราฟความเชื่อมโยงระหว่างบุคคล"></svg>
     <div class="empty" id="empty" hidden>ไม่มีความเชื่อมโยงในตัวกรองนี้</div>
     <div class="legend" id="legend"></div>
-    <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button></div>
+    <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button><button id="zfull" class="wide" aria-pressed="false" title="ขยายกราฟเต็มจอ (กด Esc เพื่อออก)">⛶ เต็มจอ</button></div>
   </main>
 
   <aside class="pane right">
@@ -429,6 +436,28 @@ svg.call(zoom).on('dblclick.zoom',null);
 document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.4);
 document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,1/1.4);
 document.getElementById('zfit').onclick=()=>fit(true);
+/* full screen: layout class + browser full screen on the whole page (so the PDF viewer can still open on top) */
+const appEl=document.querySelector('.app'), zfull=document.getElementById('zfull');
+function setFull(on){
+  appEl.classList.toggle('gfull', on);
+  zfull.setAttribute('aria-pressed', on);
+  zfull.textContent = on ? '✕ ออกจากเต็มจอ' : '⛶ เต็มจอ';
+  zfull.title = on ? 'ออกจากโหมดเต็มจอ (Esc)' : 'ขยายกราฟเต็มจอ (กด Esc เพื่อออก)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>fit(true)));
+}
+zfull.onclick=()=>{
+  const on=!appEl.classList.contains('gfull');
+  setFull(on);
+  const de=document.documentElement;
+  try{
+    if(on && de.requestFullscreen && !document.fullscreenElement) de.requestFullscreen().catch(()=>{});
+    if(!on && document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  }catch(_){}
+};
+// leaving browser full screen (Esc / F11) also leaves the full-screen layout
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && appEl.classList.contains('gfull')) setFull(false); });
+// without the browser API (e.g. in a frame), Esc still leaves the layout when no PDF page is open
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && appEl.classList.contains('gfull') && document.getElementById('viewer').hidden && !document.fullscreenElement) setFull(false); }, true);  // capture: decide before Esc closes the PDF viewer
 let sim=null, curNodes=[], curLinks=[];
 
 function filteredEdges(){
