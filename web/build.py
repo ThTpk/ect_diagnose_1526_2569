@@ -190,6 +190,23 @@ for title, pred in cats:
 # children order by first page
 for s in sections.values(): s.setdefault('pages', None)
 
+# ---------- money flow: who transferred how much to whom (graph/money.json) ----------
+money, money_bad = [], []
+MONEY = os.path.join(GRAPH, 'money.json')
+if os.path.exists(MONEY):
+    for m in json.load(open(MONEY, encoding='utf-8'))['transfers']:
+        s = sections.get(m['sec'])
+        if not s: money_bad.append(('section', m['sec'], m['f'], m['t'])); continue
+        t, p, hl = locate(m['q'], (s.get('pages') or [None])[0], True)
+        if t is None: money_bad.append(('quote', m['sec'], m['f'], m['t'], m['q'][:80])); continue
+        for x in (m['f'], m['t']):
+            if not x.startswith('R') and x not in entities:
+                entities[x] = {'id': x, 'label': x.split(':', 1)[1].split('@')[0], 'type': 'org' if x.startswith('O:') else 'person'}
+        money.append({k: v for k, v in {'from': m['f'], 'to': m['t'], 'amt': m['amt'], 'date': m.get('date'),
+            'section': m['sec'], 'v': m.get('v'), 'text': t, 'page': p, 'hl': hl, 'note': m.get('note')}.items() if v is not None})
+    print('money transfers located:', len(money), '/', len(money) + len(money_bad))
+    for b in money_bad: print('  money NOT located:', b)
+
 overview, ov_page, ov_hl = locate('ก่อนและหลังประกาศผลการเลือก คณะกรรมการการเลือกตั้งได้รับคำร้องและรายงานกรณีมีเหตุอันควรสงสัยหรือความปรากฏว่ามีบุคคลรวม ๔๒๗ ราย', None, True)
 
 data = {
@@ -201,6 +218,7 @@ data = {
     'categories': categories,
     'edges': clean_edges,
     'orders': clean_orders,
+    'money': money,
     'overview': overview, 'overviewPage': ov_page,
 }
 js = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')

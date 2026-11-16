@@ -174,6 +174,24 @@ button.pg{border:0;cursor:pointer}
 button.pg:hover{background:var(--accent-soft);color:var(--accent)}
 .nameBtn{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;text-decoration:underline dotted;text-underline-offset:4px}
 
+/* view switch + money-flow graph */
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-left:auto;background:var(--surface)}
+.modes button{border:0;background:none;padding:5px 14px;cursor:pointer;font-weight:600;color:var(--muted)}
+.modes button+button{border-left:1px solid var(--line)}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.toolbar[hidden]{display:none}
+.mlink{cursor:pointer}
+.mlink .mline{fill:none}
+.mlink:hover .mline{stroke-opacity:1}
+.mamt{font-size:10.5px;font-weight:600;fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--surface);stroke-width:3px;font-variant-numeric:tabular-nums}
+.mlink .dim,.mamt.dim{opacity:.1}
+.otag.mev{color:var(--k-action)}
+.amt{font-variant-numeric:tabular-nums}
+.stats b.neg{color:var(--k-action)}
+.mrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;align-items:baseline}
+.mrow button{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font-weight:600;text-align:left}
+.mrow span{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+
 @media (max-width:1100px){
   .app{grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(560px,70vh) auto;height:auto}
   .right{grid-column:1/-1}
@@ -190,6 +208,10 @@ button.pg:hover{background:var(--accent-soft);color:var(--accent)}
   <header>
     <h1>ใครพูดถึงใคร ในคำวินิจฉัย กกต. ที่ ๑๕๒๖/๒๕๖๙</h1>
     <span class="sub">การเลือกสมาชิกวุฒิสภา พ.ศ. ๒๕๖๗ · ผู้ถูกร้อง ๔๒๗ ราย · ถอดจากเอกสาร ๑๑๔ หน้า</span>
+    <div class="modes" role="group" aria-label="มุมมองกราฟ">
+      <button id="mode-rel" aria-pressed="true">ความเชื่อมโยง</button>
+      <button id="mode-money" aria-pressed="false">เส้นทางการเงิน</button>
+    </div>
   </header>
 
   <aside class="pane left">
@@ -226,6 +248,7 @@ button.pg:hover{background:var(--accent-soft);color:var(--accent)}
     <div class="secinfo" id="secinfo"></div>
     <div class="pane-h" style="border-top:0">
       <div class="toolbar" id="kinds" role="group" aria-label="ประเภทความเชื่อมโยง"></div>
+      <div class="toolbar" id="mkinds" role="group" aria-label="ผลวินิจฉัยของรายการโอน" hidden></div>
       <div class="toolbar">
         <input type="search" id="nodeq" placeholder="หาบุคคล: ชื่อ หรือเลขผู้ถูกร้อง เช่น ๒๐๕" aria-label="ค้นหาบุคคล" style="max-width:340px">
         <label class="chip" style="cursor:pointer"><input type="checkbox" id="labels" checked style="margin:0"> แสดงชื่อ</label>
@@ -414,6 +437,8 @@ function filteredEdges(){
 }
 const PRI=['ruling','finding','action','accusation','testimony','defense'];
 function draw(){
+  if(state.mode==='money') return drawMoney();
+  document.getElementById('empty').textContent='ไม่มีความเชื่อมโยงในตัวกรองนี้';
   const E=filteredEdges();
   renderPeople(E);
   const pairs=new Map(), deg=new Map(), selfIds=new Set();
@@ -494,11 +519,11 @@ svg.on('click',()=>{ state.sel=null; highlight(); markPeople(); showSection(); }
 
 function highlight(){
   const s=state.sel;
-  if(!s || !curNodes.some(n=>n.id===s)){ gNodes.selectAll('g.node').classed('dim',false).classed('sel',false); gLinks.selectAll('path').classed('dim',false); gLabels.selectAll('g').classed('dim',false); return; }
+  if(!s || !curNodes.some(n=>n.id===s)){ gNodes.selectAll('g.node').classed('dim',false).classed('sel',false); gLinks.selectAll('path,text').classed('dim',false); gLabels.selectAll('g').classed('dim',false); return; }
   const nb=new Set([s]); curLinks.forEach(l=>{ if(l.source.id===s) nb.add(l.target.id); if(l.target.id===s) nb.add(l.source.id); });
   gNodes.selectAll('g.node').classed('dim',d=>!nb.has(d.id)).classed('sel',d=>d.id===s);
   gLabels.selectAll('g').classed('dim',d=>!nb.has(d.id));
-  gLinks.selectAll('path').classed('dim',l=>l.source.id!==s && l.target.id!==s);
+  gLinks.selectAll('path,text').classed('dim',l=>l.source.id!==s && l.target.id!==s);
 }
 
 /* ---------- names ---------- */
@@ -571,6 +596,8 @@ function bindDetail(){
   det.querySelectorAll('[data-node]').forEach(b=>b.onclick=()=>{ const id=b.dataset.node; select(id); openPerson(id); });
   det.querySelectorAll('[data-e]').forEach(b=>{ const fn=()=>openEdge(D.edges[+b.dataset.e]); b.onclick=fn;
     b.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }; });
+  det.querySelectorAll('[data-m]').forEach(b=>{ const fn=()=>openMoney(MONEY[+b.dataset.m]); b.onclick=fn;
+    b.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); fn(); } }; });
   det.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{ const o=D.orders[+b.dataset.o]; openViewer(o.hl,o.text,`คำสั่ง · หน้า ${TH(o.page)}`); });
   det.querySelectorAll('[data-person]').forEach(b=>b.onclick=()=>openPerson(b.dataset.person));
   det.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>go(b.dataset.sec));
@@ -583,6 +610,7 @@ function listBlock(title, arr, fn){
     ${rest?`<div hidden style="display:contents">${rest}</div><button class="more">แสดงอีก ${TH(arr.length-25)} รายการ</button>`:''}`;
 }
 function select(id, dir){
+  if(state.mode==='money') return selectMoney(id);
   state.dir = dir || (state.sel===id ? state.dir : 'all');
   state.sel=id; highlight(); markPeople();
   const ids = state.sec==='*'?null:new Set(descendants(state.sec));
@@ -639,6 +667,7 @@ function overallOutcome(){
     <div class="otags">${ORDER_TAGS.map(([re,c,l])=>`<span class="otag ${c}">${l} · ${TH(cnt.get(l))} ประเด็น</span>`).join('')}</div></div>`;
 }
 function showSection(){
+  if(state.mode==='money') return showMoneySection();
   const id=state.sec, s=secs.get(id);
   const E=filteredEdges();
   const people=new Set(); E.forEach(e=>{people.add(e.from);people.add(e.to);});
@@ -717,16 +746,200 @@ document.getElementById('nodeq').addEventListener('keydown', e=>{
   if(n){ const box=svg.node().getBoundingClientRect(); svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(box.width/2-1.6*n.x, box.height/2-1.6*n.y).scale(1.6)); }
 });
 
+/* ---------- money flow: who transferred how much to whom ---------- */
+const MONEY = D.money||[]; MONEY.forEach((m,i)=>m._i=i);
+const MV = { ev:['มีหลักฐานอันควรเชื่อ','var(--k-action)','mev'], nf:['ข้อเท็จจริงรับฟังไม่ได้','var(--faint)','nf'] };
+state.mode='rel'; state.mv=new Set(['ev','nf']);
+const fmt = n => TH(Math.round(n).toLocaleString('en-US'));
+const baht = n => n==null ? 'ไม่ระบุจำนวน' : fmt(n)+' บาท';
+const bahtShort = n => n==null ? 'ไม่ระบุ' : Math.abs(n)>=1e6 ? TH((n/1e6).toFixed(2).replace(/\.?0+$/,''))+' ล้าน' : fmt(n);
+const sumAmt = a => a.reduce((s,m)=>s+(m.amt||0),0);
+const unkN = a => a.filter(m=>m.amt==null).length;
+const sumLine = a => `${baht(sumAmt(a))}${unkN(a)?` + ไม่ระบุยอด ${TH(unkN(a))} รายการ`:''}`;
+const pairKey = m => m.from+'\u0001'+m.to;
+// scales are fixed over the whole document so widths stay comparable between sections
+const MAXPAIR = Math.max(1, ...[...MONEY.reduce((s,m)=>s.set(pairKey(m),(s.get(pairKey(m))||0)+(m.amt||0)),new Map()).values()]);
+const MAXFLOW = Math.max(1, ...[...MONEY.reduce((s,m)=>{ [m.from,m.to].forEach(id=>s.set(id,(s.get(id)||0)+(m.amt||0))); return s; },new Map()).values()]);
+const moneyW = p => p.amt>0 ? 1.5+Math.sqrt(p.amt/MAXPAIR)*16 : 1.5;
+const mR = d => 5+Math.sqrt((d.flow||0)/MAXFLOW)*18;
+function moneyFiltered(){
+  const ids = state.sec==='*' ? null : new Set(descendants(state.sec));
+  return MONEY.filter(m => (!ids||ids.has(m.section)) && state.mv.has(m.v));
+}
+const openMoney = m => openViewer(m.hl, m.text, `${shortName(m.from)} → ${shortName(m.to)} · ${baht(m.amt)} · หน้า ${TH(m.page)}`);
+
+const mkindsEl=document.getElementById('mkinds');
+Object.entries(MV).forEach(([k,[l,c]])=>{
+  const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','true');
+  b.innerHTML=`<span class="sw" style="background:${c}"></span>${l}`;
+  b.onclick=()=>{ state.mv.has(k)?state.mv.delete(k):state.mv.add(k); b.setAttribute('aria-pressed',state.mv.has(k)); draw(); if(state.sel) selectMoney(state.sel); else showSection(); };
+  mkindsEl.appendChild(b);
+});
+mkindsEl.insertAdjacentHTML('beforeend','<span class="hint" style="font-size:12px">เส้นหนาและหัวลูกศรใหญ่ตามยอดเงิน · เส้นประ = ไม่ระบุยอด</span>');
+
+function mGeom(d){
+  const S=d.source, T=d.target, dx=T.x-S.x, dy=T.y-S.y, L=Math.hypot(dx,dy)||1;
+  const k=d.rev?0.22:0.08, cx=(S.x+T.x)/2-dy*k, cy=(S.y+T.y)/2+dx*k;
+  const unit=(ax,ay,bx,by)=>{ const l=Math.hypot(bx-ax,by-ay)||1; return [(bx-ax)/l,(by-ay)/l]; };
+  const [ux,uy]=unit(cx,cy,T.x,T.y), [vx,vy]=unit(cx,cy,S.x,S.y);
+  const tx=T.x-ux*(mR(T)+2), ty=T.y-uy*(mR(T)+2);
+  const a=6+d.w*1.4, hw=a*0.55, bx=tx-ux*a, by=ty-uy*a;
+  const sx=S.x-vx*(mR(S)+1), sy=S.y-vy*(mR(S)+1);
+  return { line:`M${sx},${sy}Q${cx},${cy} ${bx},${by}`,
+    head:`M${tx},${ty}L${bx-uy*hw},${by+ux*hw}L${bx+uy*hw},${by-ux*hw}Z`,
+    mx:.25*S.x+.5*cx+.25*T.x, my:.25*S.y+.5*cy+.25*T.y };
+}
+function drawMoney(){
+  renderPeople(filteredEdges());
+  const M=moneyFiltered(), pairs=new Map(), flow=new Map();
+  M.forEach(m=>{ const k=pairKey(m);
+    if(!pairs.has(k)) pairs.set(k,{source:m.from,target:m.to,items:[],amt:0,unk:0});
+    const p=pairs.get(k); p.items.push(m); if(m.amt==null) p.unk++; else p.amt+=m.amt;
+    [m.from,m.to].forEach(id=>flow.set(id,(flow.get(id)||0)+(m.amt||0))); });
+  const old=new Map(curNodes.map(n=>[n.id,n]));
+  curNodes=[...flow.keys()].map(id=>{ const o=old.get(id), e=ent.get(id)||{};
+    return Object.assign(o||{x:(Math.random()-.5)*300,y:(Math.random()-.5)*300},{id,flow:flow.get(id),type:e.type||'person',label:e.label,num:e.num}); });
+  curLinks=[...pairs.values()];
+  curLinks.forEach(p=>{ p.v=p.items.some(i=>i.v==='ev')?'ev':'nf'; p.rev=pairs.has(p.target+'\u0001'+p.source); p.w=moneyW(p); });
+  const empty=document.getElementById('empty'); empty.textContent='ไม่มีรายการโอนเงินในประเด็นหรือตัวกรองนี้'; empty.hidden=curNodes.length>0;
+
+  const link=gLinks.selectAll('g.mlink').data(curLinks,d=>(d.source.id||d.source)+'>'+(d.target.id||d.target));
+  link.exit().remove();
+  const le=link.enter().append('g').attr('class','mlink').on('click',(ev,d)=>{ev.stopPropagation(); showMoneyPair(d);});
+  le.append('path').attr('class','mline'); le.append('path').attr('class','mhead'); le.append('text').attr('class','mamt').attr('dy','-0.35em'); le.append('title');
+  const la=le.merge(link);
+  la.select('.mline').attr('stroke',d=>MV[d.v][1]).attr('stroke-width',d=>d.w).attr('stroke-opacity',.72).attr('stroke-dasharray',d=>d.amt?null:'5 4');
+  la.select('.mhead').style('fill',d=>MV[d.v][1]);
+  la.select('.mamt').text(d=>d.amt?bahtShort(d.amt)+(d.unk?' +?':''):'ไม่ระบุยอด');
+  la.select('title').text(d=>`${nameOf(d.source.id||d.source)} → ${nameOf(d.target.id||d.target)} · ${baht(d.amt||null)}${d.items.length>1?` (${TH(d.items.length)} รายการ)`:''}`);
+
+  const node=gNodes.selectAll('g.node').data(curNodes,d=>d.id);
+  node.exit().remove();
+  const nodeE=node.enter().append('g').attr('class',d=>'node '+d.type)
+    .on('click',(ev,d)=>{ev.stopPropagation(); selectMoney(d.id);})
+    .call(d3.drag().on('start',(ev,d)=>{if(!ev.active)sim.alphaTarget(.2).restart(); d.fx=d.x; d.fy=d.y;})
+      .on('drag',(ev,d)=>{d.fx=ev.x; d.fy=ev.y;}).on('end',(ev,d)=>{if(!ev.active)sim.alphaTarget(0); d.fx=null; d.fy=null;}));
+  nodeE.each(function(d){ const g=d3.select(this); if(d.type==='org'||d.type==='group') g.append('rect'); else g.append('circle'); g.append('title'); });
+  const nodeAll=nodeE.merge(node);
+  nodeAll.select('circle').attr('r',mR).attr('fill',d=>`var(--n-${d.type})`).style('stroke',d=>d.type==='witness'?'var(--n-witness)':null);
+  nodeAll.select('rect').attr('width',d=>mR(d)*2).attr('height',d=>mR(d)*2).attr('x',d=>-mR(d)).attr('y',d=>-mR(d)).attr('rx',2).attr('fill',d=>`var(--n-${d.type})`);
+  nodeAll.select('title').text(d=>`${nameOf(d.id)} · เงินผ่าน ${baht(d.flow)}`);
+
+  const lab=gLabels.selectAll('g').data(curNodes,d=>d.id);
+  lab.exit().remove();
+  const labE=lab.enter().append('g').attr('class','node'); labE.append('text').attr('dy','0.32em');
+  labE.merge(lab).select('text').attr('x',d=>mR(d)+4).text(d=>shortName(d.id));
+  gLabels.style('display', state.labels?null:'none');
+
+  if(sim) sim.stop();
+  sim=d3.forceSimulation(curNodes)
+    .force('link',d3.forceLink(curLinks).id(d=>d.id).distance(120).strength(.5))
+    .force('charge',d3.forceManyBody().strength(-340))
+    .force('collide',d3.forceCollide(d=>mR(d)+8))
+    .force('x',d3.forceX().strength(.05)).force('y',d3.forceY().strength(.05))
+    .on('tick',()=>{
+      la.each(function(d){ const g=mGeom(d), s=d3.select(this);
+        s.select('.mline').attr('d',g.line); s.select('.mhead').attr('d',g.head); s.select('.mamt').attr('x',g.mx).attr('y',g.my); });
+      gNodes.selectAll('g.node').attr('transform',d=>`translate(${d.x},${d.y})`);
+      gLabels.selectAll('g').attr('transform',d=>`translate(${d.x},${d.y})`);
+    });
+  sim.on('end',()=>fit(true));
+  sim.alpha(1).restart();
+  setTimeout(()=>fit(false),700);
+  highlight();
+}
+function mHTML(m, pair){
+  return `<div class="stmt" style="border-color:${MV[m.v][1]}">
+    <div class="who"><b class="amt" style="color:var(--fg)">${baht(m.amt)}</b> · ${esc(m.date||'')} <span class="otag ${MV[m.v][2]}">${MV[m.v][0]}</span></div>
+    ${pair?`<div class="who"><button data-node="${esc(m.from)}">${esc(shortName(m.from))}</button> → <button data-node="${esc(m.to)}">${esc(shortName(m.to))}</button></div>`:''}
+    <blockquote class="txt" data-m="${m._i}" title="เปิดหน้า ${TH(m.page)} ในเอกสารต้นฉบับ" tabindex="0">“${esc(m.text)}”</blockquote>
+    ${m.note?`<div class="src">หมายเหตุผู้จัดทำ: ${esc(m.note)}</div>`:''}
+    <div class="src"><button class="pg" data-m="${m._i}" title="เปิดในเอกสารต้นฉบับ">หน้า ${TH(m.page)}</button> · <button data-sec="${esc(m.section)}">${esc(secTitle(m.section))}</button></div></div>`;
+}
+function mGroups(arr, key, word){
+  const g=new Map(); arr.forEach(m=>{ const k=key(m); if(!g.has(k)) g.set(k,[]); g.get(k).push(m); });
+  return [...g.entries()].sort((a,b)=>sumAmt(b[1])-sumAmt(a[1])).map(([p,items])=>`<div class="pgrp">
+    <div class="group-h"><b>${word} <button data-node="${esc(p)}">${esc(shortName(p))}</button></b><span>${sumLine(items)}</span></div>
+    ${items.map(m=>mHTML(m,false)).join('')}</div>`).join('');
+}
+function selectMoney(id){
+  state.sel=id; highlight(); markPeople();
+  const M=moneyFiltered(), out=M.filter(m=>m.from===id), inn=M.filter(m=>m.to===id);
+  const all=MONEY.filter(m=>m.from===id||m.to===id), net=sumAmt(inn)-sumAmt(out), rr=RESP.get(id);
+  dlabel.textContent='เส้นทางการเงิน · บุคคล';
+  det.innerHTML=`<div><h3>${rr&&rr.hl?`<button class="nameBtn" data-person="${esc(id)}" title="เปิดรายชื่อในเอกสาร หน้า ${TH(rr.page)}">${esc(nameOf(id))}</button>`:esc(nameOf(id))}</h3>
+      <div class="role">${esc(roleOf(id))}</div></div>
+    <div class="stats">
+      <div><b>${bahtShort(sumAmt(out))}</b><span>โอนออก (บาท) · ${TH(out.length)} รายการ</span></div>
+      <div><b>${bahtShort(sumAmt(inn))}</b><span>ได้รับ (บาท) · ${TH(inn.length)} รายการ</span></div>
+      <div><b class="${net<0?'neg':''}">${net>0?'+':''}${bahtShort(net)}</b><span>สุทธิ (ได้รับ − โอนออก)</span></div></div>
+    ${unkN(out)+unkN(inn)?`<div class="hint">มี ${TH(unkN(out)+unkN(inn))} รายการที่เอกสารไม่ระบุยอดเงิน จึงไม่ได้รวมในยอดข้างบน</div>`:''}
+    ${all.length>out.length+inn.length?`<div class="hint">แสดงเฉพาะประเด็นและตัวกรองที่เลือก · ในเอกสารทั้งหมดมี ${TH(all.length)} รายการ <button class="more" id="allsec">ดูทุกประเด็น</button></div>`:''}
+    ${!out.length&&!inn.length?'<div class="hint">ไม่พบรายการโอนเงินของบุคคลนี้ในตัวกรองนี้</div>':''}
+    ${out.length?`<div class="group-h"><b>โอนออก</b><span>${sumLine(out)}</span></div>${mGroups(out,m=>m.to,'ให้')}`:''}
+    ${inn.length?`<div class="group-h"><b>ได้รับ</b><span>${sumLine(inn)}</span></div>${mGroups(inn,m=>m.from,'จาก')}`:''}`;
+  const a=document.getElementById('allsec');
+  if(a) a.onclick=()=>{ state.mv=new Set(Object.keys(MV)); mkindsEl.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','true')); go('*'); selectMoney(id); };
+  bindDetail(); det.parentElement.scrollTop=0;
+}
+function showMoneyPair(p){
+  const a=p.source.id, b=p.target.id, back=curLinks.find(l=>l.source.id===b&&l.target.id===a);
+  const items=[...p.items, ...(back?back.items:[])];
+  dlabel.textContent='เส้นทางการเงิน · การโอน';
+  det.innerHTML=`<div><h3>${esc(shortName(a))} → ${esc(shortName(b))}</h3>
+      <div class="role">${sumLine(p.items)}${back?` · โอนกลับ ${sumLine(back.items)}`:''} · คลิกข้อความเพื่อเปิดหน้าในเอกสาร</div></div>
+    ${items.map(m=>mHTML(m,true)).join('')}`;
+  bindDetail(); det.parentElement.scrollTop=0;
+  if(items.length) openMoney(items[0]);
+}
+function showMoneySection(){
+  const M=moneyFiltered(), ev=M.filter(m=>m.v==='ev'), nf=M.filter(m=>m.v==='nf');
+  const people=new Set(M.flatMap(m=>[m.from,m.to]));
+  const tally=key=>{ const s=new Map(); M.forEach(m=>s.set(key(m),(s.get(key(m))||0)+(m.amt||0))); return [...s.entries()].sort((x,y)=>y[1]-x[1]).slice(0,8); };
+  const rows=arr=>arr.map(([p,v])=>`<div class="mrow"><button data-node="${esc(p)}">${esc(shortName(p))}</button><span>${baht(v)}</span></div>`).join('');
+  dlabel.textContent='เส้นทางการเงิน · ภาพรวม';
+  det.innerHTML=`<div class="stats"><div><b>${bahtShort(sumAmt(M))}</b><span>ยอดโอนรวม (บาท)</span></div><div><b>${TH(M.length)}</b><span>รายการโอน</span></div><div><b>${TH(people.size)}</b><span>บุคคล/บัญชี</span></div></div>
+    <div class="outcome" style="border-left-color:var(--k-action)"><h4>ผลวินิจฉัยของรายการโอน</h4>
+      <div class="item"><span class="otag mev">${MV.ev[0]}</span> ${TH(ev.length)} รายการ · ${baht(sumAmt(ev))}</div>
+      <div class="item"><span class="otag nf">${MV.nf[0]}</span> ${TH(nf.length)} รายการ · ${baht(sumAmt(nf))}</div>
+      <div class="note">“รับฟังไม่ได้” คือ กกต. เห็นว่าการโอนนั้นไม่เกี่ยวกับการเลือก สว. เช่น เป็นค่าจ้าง ค่าสินค้า หรือเงินในครอบครัว</div></div>
+    ${M.length?`<div class="group-h"><b>โอนออกมากที่สุด</b><span>ในตัวกรองนี้</span></div>${rows(tally(m=>m.from))}
+    <div class="group-h"><b>ได้รับมากที่สุด</b><span>ในตัวกรองนี้</span></div>${rows(tally(m=>m.to))}`:'<div class="hint">ไม่มีรายการโอนเงินในประเด็นนี้ · เลือก “ทุกประเด็น” เพื่อดูทั้งหมด</div>'}
+    <div class="hint">ยอดเงินคัดจากข้อความในคำวินิจฉัย บางรายการเป็นยอดที่อนุมานจากข้อความ (ดูหมายเหตุในแต่ละรายการ) · คลิกเส้นเพื่อดูข้อความในเอกสาร คลิกจุดเพื่อดูยอดโอนออก/ได้รับ</div>`;
+  bindDetail();
+}
+
+/* ---------- view switch ---------- */
+const nodeLegend = document.getElementById('legend').innerHTML;
+function setMode(m, quiet){
+  if(state.mode===m && !quiet) return;
+  state.mode=m; state.sel=null;
+  document.getElementById('mode-rel').setAttribute('aria-pressed', m==='rel');
+  document.getElementById('mode-money').setAttribute('aria-pressed', m==='money');
+  kindsEl.hidden = m==='money'; mkindsEl.hidden = m!=='money';
+  document.getElementById('legend').innerHTML = (m==='money' ? Object.values(MV).map(([l,c])=>`<span><i style="background:${c};border-radius:2px;height:4px;width:16px"></i>${l}</span>`).join('') : '') + nodeLegend;
+  svg.attr('aria-label', m==='money' ? 'กราฟเส้นทางการเงิน ใครโอนเงินให้ใคร' : 'กราฟความเชื่อมโยงระหว่างบุคคล');
+  if(sim) sim.stop();
+  gLinks.selectAll('*').remove(); gNodes.selectAll('*').remove(); gLabels.selectAll('*').remove(); curNodes=[]; curLinks=[];
+  if(!quiet) go(state.sec);
+}
+document.getElementById('mode-rel').onclick=()=>setMode('rel');
+document.getElementById('mode-money').onclick=()=>setMode('money');
+
 /* ---------- routing ---------- */
+function parseHash(){ let h=location.hash.slice(1); const money=/-money$/.test(h); if(money) h=h.slice(0,-6); return [idByHash.get(h), money]; }
 function go(id, fromHash){
   state.sec=id; state.sel=null;
   toc.querySelectorAll('.sec').forEach(b=>b.setAttribute('aria-current', b.dataset.id===id));
-  if(!fromHash){ const h=hashOf(id); if(location.hash.slice(1)!==h) history.replaceState(null,'','#'+h); }
+  if(!fromHash){ const h=hashOf(id)+(state.mode==='money'?'-money':''); if(location.hash.slice(1)!==h) history.replaceState(null,'','#'+h); }
   renderSecInfo(); draw(); showSection();
 }
-window.addEventListener('hashchange',()=>{ const id=idByHash.get(location.hash.slice(1)); if(id&&id!==state.sec) go(id,true); });
+window.addEventListener('hashchange',()=>{ const [id,money]=parseHash(); const m=money?'money':'rel';
+  if(m!==state.mode) setMode(m,true);
+  if(id) go(id,true); });
 renderToc();
-const start=idByHash.get(location.hash.slice(1)) || D.defaultSection || '*';
-go(start,true);
+const [hid, hmoney] = parseHash();
+if(hmoney) setMode('money', true);
+go(hid || D.defaultSection || '*', true);
 })();
 </script>
