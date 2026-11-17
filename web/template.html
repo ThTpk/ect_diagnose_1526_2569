@@ -82,6 +82,9 @@ svg#g:active{cursor:grabbing}
 .legend span{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
 .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .zoombtns{flex:none;display:flex;gap:4px;margin-left:auto}
+.legtog{display:none;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg);cursor:pointer;font-size:13px}
+.legtog .chev{transition:transform .15s}
+.legtog[aria-expanded="true"] .chev{transform:rotate(180deg)}
 .zoombtns button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;font-size:16px}
 .zoombtns button.wide{width:auto;padding:0 10px;font-size:13px;font-weight:600}
 .zoombtns button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
@@ -248,6 +251,9 @@ svg#t:active{cursor:grabbing}
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
   .left .scroll{max-height:300px}
   svg#g,svg#t{min-height:440px}
+  .legtog{display:inline-flex}
+  .gfoot .legend{order:3;flex-basis:100%}
+  .gfoot:not(.open) .legend{display:none}
 }
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
@@ -308,7 +314,7 @@ svg#t:active{cursor:grabbing}
     <svg id="g" role="img" aria-label="กราฟความเชื่อมโยงระหว่างบุคคล"></svg>
     <svg id="t" role="img" aria-label="แผนภาพลำดับเวลา แยกช่องตามกลุ่มบุคคล" hidden></svg>
     <div class="empty" id="empty" hidden>ไม่มีความเชื่อมโยงในตัวกรองนี้</div>
-    <div class="gfoot"><div class="legend" id="legend"></div>
+    <div class="gfoot" id="gfoot"><button class="legtog" id="legtog" aria-expanded="false" aria-controls="legend">สัญลักษณ์ <span class="chev" aria-hidden="true">▾</span></button><div class="legend" id="legend"></div>
     <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button><button id="zfull" class="wide" aria-pressed="false" title="ขยายกราฟเต็มจอ (กด Esc เพื่อออก)">⛶ เต็มจอ</button></div></div>
   </main>
 
@@ -1313,10 +1319,15 @@ PRESETS.forEach(([l,a,b])=>{ const x=document.createElement('button'); x.classNa
   x.onclick=()=>a?tZoomTo(day(a),day(b),true):tZoomTo(tExtent[0],tExtent[1],true); trEl.appendChild(x); });
 const timeLegend = Object.values(MROLE).map(([l,c])=>`<span><i style="background:${c}"></i>${l}</span>`).join('') + `<span><i style="width:0;height:12px;border-radius:0;border-left:1.5px dashed var(--fg)"></i>วันสำคัญ</span><span><i style="width:16px;height:3px;border-radius:1px;background:var(--muted)"></i>ช่วงวันที่ (ระหว่าง…ถึง…)</span><span><i style="background:var(--faint)"></i>หนึ่งจุด = หนึ่งข้อความที่ระบุวันที่</span>`;
 
+/* legend: folded away on phones until asked for */
+const legTog=document.getElementById('legtog'), gfoot=document.getElementById('gfoot');
+legTog.onclick=()=>{ const on=!gfoot.classList.contains('open'); gfoot.classList.toggle('open',on); legTog.setAttribute('aria-expanded',on); };
+
 /* ---------- view switch ---------- */
 const nodeLegend = document.getElementById('legend').innerHTML;
 function setMode(m, quiet){
   if(state.mode===m && !quiet) return;
+  const keep=state.sel;   // the person picked in one view stays picked in the next
   state.mode=m; state.sel=null; state.tev=null;
   ['rel','money','time'].forEach(k=>document.getElementById('mode-'+k).setAttribute('aria-pressed', m===k));
   kindsEl.hidden = m!=='rel'; mkindsEl.hidden = m!=='money'; tkindsEl.hidden = trEl.hidden = m!=='time';
@@ -1327,7 +1338,7 @@ function setMode(m, quiet){
   svg.attr('aria-label', m==='money' ? 'กราฟเส้นทางการเงิน ใครโอนเงินให้ใคร' : 'กราฟความเชื่อมโยงระหว่างบุคคล');
   if(sim) sim.stop();
   gLinks.selectAll('*').remove(); gNodes.selectAll('*').remove(); gLabels.selectAll('*').remove(); curNodes=[]; curLinks=[];
-  if(!quiet) go(state.sec);
+  if(!quiet){ go(state.sec); if(keep) select(keep); }
 }
 document.getElementById('mode-rel').onclick=()=>setMode('rel');
 document.getElementById('mode-money').onclick=()=>setMode('money');
