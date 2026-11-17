@@ -212,4 +212,6 @@ def build(DOCN, page_at, NL, hl_for, locate, edges, money, sections, resp, entit
 
     by_k = collections.Counter(ev['k'] for ev in out)
     print('timeline events:', len(out), dict(by_k), '| milestones', len(miles), '/', len(MILESTONES))
-    return {'lanes': LANES, 'events': out, 'milestones': miles}
+    # which lane each person sits in, so the page can follow one person from day to day
+    pl = {p: lane_of(p) for ev in out for p in ev['who']}
+    return {'lanes': LANES, 'events': out, 'milestones': miles, 'pl': pl}

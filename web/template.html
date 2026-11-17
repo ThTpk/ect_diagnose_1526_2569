@@ -225,6 +225,9 @@ svg#t:active{cursor:grabbing}
 .tbar{opacity:.4}
 .tbar.dim{opacity:.06}
 .tconn{stroke:var(--fg);stroke-width:1.5;stroke-dasharray:2 2;pointer-events:none}
+.tkin{fill:none;stroke-width:1.6;stroke-opacity:.6;pointer-events:none}
+.tdot.kin{stroke:var(--fg);stroke-width:1.4}
+.tdot.faint{opacity:.28}
 .tmore{font-size:10px;font-weight:600;fill:var(--muted);cursor:pointer;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
 .tdate{font-variant-numeric:tabular-nums}
 .tday{display:flex;flex-direction:column;gap:6px}
@@ -1035,7 +1038,7 @@ const tG = {};
 tG.bg = tsvg.append('g'); tG.grid = tsvg.append('g').attr('class','tgrid');
 tG.plot = tsvg.append('g').attr('clip-path','url(#tclip)');
 tG.bars = tG.plot.append('g'); tG.mile = tG.plot.append('g').attr('class','tmile');
-tG.dots = tG.plot.append('g'); tG.more = tG.plot.append('g'); tG.conn = tG.plot.append('g');
+tG.kin = tG.plot.append('g'); tG.dots = tG.plot.append('g'); tG.more = tG.plot.append('g'); tG.conn = tG.plot.append('g');
 tG.mlab = tsvg.append('g').attr('class','tmile'); tG.lbl = tsvg.append('g').attr('class','tlane-l'); tG.ax = tsvg.append('g').attr('class','tax');
 const TAX=26, TMB=20, TR=3.6, TSTEP=8.4, TBIN=9;
 let TLBL=150, tW=0, tHt=0, laneH=60, tT=d3.zoomIdentity, tPos=new Map(), tLastSec=null;
@@ -1127,7 +1130,7 @@ function tRender(){
     const show=b.items.length>cap ? cap-1 : b.items.length;
     b.items.slice(0,show).forEach(([e,pi],j)=>{ const c=j%cols, r=Math.floor(j/cols);
       const x=b.x+(c-(cols-1)/2)*TSTEP, y=base-r*TSTEP;
-      dots.push({e,x,y,l:b.l,key:e._i+'|'+b.l+'|'+pi}); if(!tPos.has(e._i)) tPos.set(e._i,[]); tPos.get(e._i).push([x,y,pi]); });
+      dots.push({e,x,y,l:b.l,key:e._i+'|'+b.l+'|'+pi}); if(!tPos.has(e._i)) tPos.set(e._i,[]); tPos.get(e._i).push([x,y,pi,b.l]); });
     if(b.items.length>show) more.push({x:b.x,y:top0+li*laneH+11,n:b.items.length-show,items:b.items.map(p=>p[0]),key:b.l+'|'+b.x});
   });
   tG.dots.selectAll('circle').data(dots,d=>d.key).join(en=>en.append('circle').attr('class','tdot').attr('r',TR)
@@ -1150,11 +1153,26 @@ function tConn(e){
   const segs=[...d3.group(P,p=>p[2]).values()].filter(a=>a.length>1).map(a=>a.slice().sort((p,q)=>p[1]-q[1]));
   tG.conn.selectAll('path').data(segs).join('path').attr('class','tconn').attr('fill','none').attr('d',d3.line());
 }
+// the people of the clicked event (or just the selected person) and the lane each of them sits in
+const PL = TL.pl || {};
+const tKinPeople = e => !e ? [] : state.sel ? (e.who.includes(state.sel)?[state.sel]:[]) : e.who.filter(p=>PL[p]);
+// one thread per person: every dot of that person's events in their own lane, left to right
+function tKin(e){
+  const P=tKinPeople(e), E=tFiltered(), th=[];
+  P.forEach(p=>{ const pts=[];
+    E.forEach(x=>{ if(x.who.includes(p)) (tPos.get(x._i)||[]).forEach(q=>{ if(q[3]===PL[p]) pts.push(q); }); });
+    if(pts.length>1) th.push({p, l:PL[p], pts:pts.sort((a,b)=>a[0]-b[0]||b[1]-a[1])}); });
+  tG.kin.selectAll('path').data(th,d=>d.p).join('path').attr('class','tkin').style('stroke',d=>LANE_COL[d.l])
+    .attr('d',d=>d3.line().curve(d3.curveBumpX)(d.pts));
+  return new Set(P);
+}
 function tMark(){
-  const s=state.sel, h=state.tev;
-  tG.dots.selectAll('circle').classed('dim',d=>!!s && !d.e.who.includes(s)).classed('hot',d=>d.e._i===h);
+  const s=state.sel, h=state.tev, he=h!=null?EV[h]:null;
+  const kin=tKin(he), isKin=d=>!!he && d.e!==he && d.e.who.some(p=>kin.has(p));
+  tG.dots.selectAll('circle').classed('dim',d=>!!s && !d.e.who.includes(s)).classed('hot',d=>d.e._i===h)
+    .classed('kin',isKin).classed('faint',d=>!!he && !s && d.e!==he && !isKin(d));
   tG.bars.selectAll('rect').classed('dim',d=>!!s && !d.e.who.includes(s));
-  tConn(h!=null?EV[h]:null);
+  tConn(he);
 }
 function tHover(e){
   tConn(e || (state.tev!=null?EV[state.tev]:null));
@@ -1188,13 +1206,19 @@ function showEvent(e){
   state.tev=e._i; tMark();
   dlabel.textContent='ลำดับเวลา · เหตุการณ์';
   const same=tFiltered().filter(x=>x!==e && x.pts.some(t=>e.pts.some(u=>+t===+u)));
+  const kp=tKinPeople(e), days=new Set(e.pts.map(t=>+t));
+  const kinEv=tFiltered().filter(x=>x!==e && !x.pts.some(t=>days.has(+t)) && x.who.some(p=>kp.includes(p)));
+  const kinCnt=p=>kinEv.filter(x=>x.who.includes(p)).length;
+  const kinWho=kp.filter(p=>kinCnt(p)).map(p=>`<button data-node="${esc(p)}">${esc(shortName(p))}</button> <span class="badge" style="color:${LANE_COL[PL[p]]}">${TH(kinCnt(p))}</span>`);
   const rel=(e.ei||[]).map(i=>D.edges[i]).filter(Boolean), mon=(e.mi||[]).map(i=>MONEY[i]).filter(Boolean);
   const relRow=x=>`<div class="who"><span class="badge" style="color:var(--k-${x.kind})">${KIND_LABEL[x.kind]}</span> <button data-node="${esc(x.from)}">${esc(shortName(x.from))}</button> → <button data-node="${esc(x.to)}">${esc(shortName(x.to))}</button>${x.verb?` · ${esc(x.verb)}`:''}</div>`;
   det.innerHTML=`<div><h3>${esc(evDate(e))}</h3><div class="role">ในเอกสารเขียนว่า “${esc(e.dt)}” · คลิกข้อความเพื่อเปิดหน้านั้นในเอกสาร</div></div>
     ${tItem(e,false)}
     ${mon.length?`<div class="group-h"><b>รายการโอนเงินในข้อความนี้</b><span>${sumLine(mon)}</span></div>${mon.map(m=>mHTML(m,true)).join('')}`:''}
     ${rel.length?`<div class="group-h"><b>ความเชื่อมโยงจากข้อความนี้</b><span>${TH(rel.length)} รายการ</span></div><div class="stmt" style="border-color:var(--line)">${moreList(rel,10,relRow)}</div>`:''}
-    ${same.length?`<div class="group-h"><b>เหตุการณ์อื่นในวันเดียวกัน</b><span>${TH(same.length)} รายการ</span></div>${moreList(same,8,x=>tItem(x))}`:''}`;
+    ${same.length?`<div class="group-h"><b>เหตุการณ์อื่นในวันเดียวกัน</b><span>${TH(same.length)} รายการ</span></div>${moreList(same,8,x=>tItem(x))}`:''}
+    ${kinEv.length?`<div class="group-h"><b>บุคคลเดียวกันในวันอื่น</b><span>${TH(kinEv.length)} รายการ</span></div>
+      <div class="hint">เส้นสีในแผนภาพเชื่อมจุดของแต่ละคนข้ามวัน · ${kinWho.slice(0,8).join(', ')}${kinWho.length>8?` และอีก ${TH(kinWho.length-8)} ราย`:''}</div>${moreList(kinEv,8,x=>tItem(x))}`:''}`;
   bindDetail(); det.parentElement.scrollTop=0;
 }
 function showBin(items){
@@ -1244,7 +1268,7 @@ function showTimeSection(){
       <div class="note">เส้นประแนวตั้งในแผนภาพ · คลิกเพื่อเลื่อนไปยังวันนั้นและเปิดข้อความในเอกสาร</div></div>
     ${dayCount.length?`<div class="group-h"><b>วันที่มีเหตุการณ์มากที่สุด</b><span>ในตัวกรองนี้</span></div>
       <div class="tday">${dayCount.map(([t,n])=>`<div class="trow"><button data-tday="${isoOf(new Date(t))}">${thDate(new Date(t))}</button><span>${TH(n)} เหตุการณ์</span></div>`).join('')}</div>`:''}
-    <div class="hint">แต่ละจุดคือข้อความในคำวินิจฉัยที่ระบุวันที่ วางตามวันที่และกลุ่มของบุคคลที่เกี่ยวข้อง เหตุการณ์ที่เกี่ยวกับหลายกลุ่มจึงปรากฏในหลายช่อง · ชี้ที่จุดเพื่อดูเส้นเชื่อมข้ามช่อง · คลิกจุดเพื่ออ่านข้อความ · เลื่อนล้อเมาส์เพื่อซูมแกนเวลา ลากเพื่อเลื่อน</div>`;
+    <div class="hint">แต่ละจุดคือข้อความในคำวินิจฉัยที่ระบุวันที่ วางตามวันที่และกลุ่มของบุคคลที่เกี่ยวข้อง เหตุการณ์ที่เกี่ยวกับหลายกลุ่มจึงปรากฏในหลายช่อง · ชี้ที่จุดเพื่อดูเส้นเชื่อมข้ามช่อง · คลิกจุดเพื่ออ่านข้อความและดูเส้นสีที่ตามบุคคลเดียวกันไปยังวันอื่น · เลื่อนล้อเมาส์เพื่อซูมแกนเวลา ลากเพื่อเลื่อน</div>`;
   bindDetail();
 }
 
