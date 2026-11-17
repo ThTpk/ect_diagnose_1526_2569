@@ -12,7 +12,7 @@
 :root{
   --bg:#f3f4f6; --surface:#ffffff; --sunken:#e9ebef; --line:#d5d9e0; --fg:#18202c; --muted:#5b6575; --faint:#8a93a3;
   --accent:#28407a; --accent-soft:#e3e8f4;
-  --k-testimony:#2f6fbf; --k-defense:#5f7f6a; --k-accusation:#c07a14; --k-action:#c4452c; --k-finding:#7a4bb0; --k-ruling:#8d1f2b;
+  --k-testimony:#2f6fbf; --k-defense:#5f7f6a; --k-accusation:#c07a14; --k-action:#c4452c; --k-finding:#7a4bb0; --k-ruling:#8d1f2b; --m-out:#c62828; --m-in:#1e8e5a; --m-both:#c2185b;
   --n-politic:#b3303b; --n-national:#3c5a9c; --n-province:#20857f; --n-district:#7b8a25; --n-unknown:#8a93a3;
   --n-witness:#d08a10; --n-person:#6b7280; --n-org:#2a2f38; --n-group:#9a6b3f;
   --font-ui:"IBM Plex Sans Thai",system-ui,"Leelawadee UI","Tahoma",sans-serif;
@@ -22,14 +22,14 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#12161d; --surface:#1a1f28; --sunken:#222833; --line:#2e3644; --fg:#e6e9ef; --muted:#a3acbb; --faint:#6f7888;
   --accent:#9db4ef; --accent-soft:#25304a;
-  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a;
+  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a; --m-out:#f26b5b; --m-in:#4cc38a; --m-both:#f06aa8;
   --n-politic:#e0606b; --n-national:#7e9be0; --n-province:#4fc0b8; --n-district:#b3c24f; --n-unknown:#8a93a3;
   --n-witness:#f0b445; --n-person:#9aa3b2; --n-org:#d8dde6; --n-group:#c9996b;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12161d; --surface:#1a1f28; --sunken:#222833; --line:#2e3644; --fg:#e6e9ef; --muted:#a3acbb; --faint:#6f7888;
   --accent:#9db4ef; --accent-soft:#25304a;
-  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a;
+  --k-testimony:#6aa7ee; --k-defense:#8fb59c; --k-accusation:#e3a447; --k-action:#ef7a60; --k-finding:#b48ae6; --k-ruling:#e0697a; --m-out:#f26b5b; --m-in:#4cc38a; --m-both:#f06aa8;
   --n-politic:#e0606b; --n-national:#7e9be0; --n-province:#4fc0b8; --n-district:#b3c24f; --n-unknown:#8a93a3;
   --n-witness:#f0b445; --n-person:#9aa3b2; --n-org:#d8dde6; --n-group:#c9996b;
   color-scheme:dark}
@@ -187,6 +187,10 @@ button.pg:hover{background:var(--accent-soft);color:var(--accent)}
 .modes button+button{border-left:1px solid var(--line)}
 .modes button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
 .toolbar[hidden]{display:none}
+.allbtns{display:inline-flex;gap:4px}
+.allbtns button{border:1px dashed var(--line);background:var(--surface);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+.allbtns button:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.allbtns button:disabled{opacity:.4;cursor:default}
 .mlink{cursor:pointer}
 .mlink .mline{fill:none}
 .mlink:hover .mline{stroke-opacity:1}
@@ -445,6 +449,19 @@ document.getElementById('secq').addEventListener('input', e => {
 });
 
 /* ---------- kind chips + legend ---------- */
+/* "เปิดทั้งหมด / ปิดทั้งหมด" for a row of toggle chips, when the row is long enough to need it */
+function allToggle(el, getSet, keys, refresh){
+  if(keys.length<2) return;
+  const box=document.createElement('span'); box.className='allbtns'; box.setAttribute('role','group'); box.setAttribute('aria-label','เลือกทั้งหมด');
+  box.innerHTML='<button type="button" data-all="1">เปิดทั้งหมด</button><button type="button" data-all="0">ปิดทั้งหมด</button>';
+  const sync=()=>{ const set=getSet(); box.children[0].disabled=keys.every(k=>set.has(k)); box.children[1].disabled=!keys.some(k=>set.has(k)); };
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const set=getSet(), on=b.dataset.all==='1';
+    keys.forEach(k=>on?set.add(k):set.delete(k));
+    el.querySelectorAll('.chip[data-k]').forEach(c=>c.setAttribute('aria-pressed', set.has(c.dataset.k)));
+    sync(); refresh(); });
+  el.addEventListener('click', sync);   // chips toggled one by one: their own handler has already run (bubbling)
+  el.appendChild(box); sync();
+}
 const kindsEl=document.getElementById('kinds');
 KINDS.forEach(([k,l])=>{
   const b=document.createElement('button'); b.className='chip'; b.dataset.k=k;
@@ -453,6 +470,7 @@ KINDS.forEach(([k,l])=>{
   b.onclick=()=>{ state.kinds.has(k)?state.kinds.delete(k):state.kinds.add(k); b.setAttribute('aria-pressed',state.kinds.has(k)); draw(); };
   kindsEl.appendChild(b);
 });
+allToggle(kindsEl, ()=>state.kinds, KINDS.map(k=>k[0]), ()=>draw());
 document.getElementById('legend').innerHTML = NODE_TYPES.map(([t,l]) =>
   t==='witness' ? `<span><i style="border:2px solid var(--n-witness);background:var(--surface)"></i>${l}</span>`
   : t==='org' ? `<span><i style="border-radius:2px;background:var(--n-org)"></i>${l}</span>`
@@ -842,11 +860,12 @@ const openMoney = m => openViewer(m.hl, m.text, `${shortName(m.from)} → ${shor
 
 const mkindsEl=document.getElementById('mkinds');
 Object.entries(MV).forEach(([k,[l,c]])=>{
-  const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','true');
+  const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','true'); b.dataset.k=k;
   b.innerHTML=`<span class="sw" style="background:${c}"></span>${l}`;
   b.onclick=()=>{ state.mv.has(k)?state.mv.delete(k):state.mv.add(k); b.setAttribute('aria-pressed',state.mv.has(k)); draw(); if(state.sel) selectMoney(state.sel); else showSection(); };
   mkindsEl.appendChild(b);
 });
+allToggle(mkindsEl, ()=>state.mv, Object.keys(MV), ()=>{ draw(); if(state.sel) selectMoney(state.sel); else showSection(); });
 mkindsEl.insertAdjacentHTML('beforeend','<span class="hint" style="font-size:12px">เส้นหนาและหัวลูกศรใหญ่ตามยอดเงิน · เส้นประ = ไม่ระบุยอด</span>');
 
 function mGeom(d){
@@ -951,7 +970,7 @@ function selectMoney(id){
     ${out.length?`<div class="group-h"><b>โอนออก</b><span>${sumLine(out)}</span></div>${mGroups(out,m=>m.to,'ให้')}`:''}
     ${inn.length?`<div class="group-h"><b>ได้รับ</b><span>${sumLine(inn)}</span></div>${mGroups(inn,m=>m.from,'จาก')}`:''}`;
   const a=document.getElementById('allsec');
-  if(a) a.onclick=()=>{ state.mv=new Set(Object.keys(MV)); mkindsEl.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','true')); go('*'); selectMoney(id); };
+  if(a) a.onclick=()=>{ Object.keys(MV).forEach(k=>state.mv.add(k)); mkindsEl.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','true')); go('*'); selectMoney(id); };
   bindDetail(); det.parentElement.scrollTop=0;
 }
 function showMoneyPair(p){
@@ -993,6 +1012,10 @@ const TK = { money:['โอนเงิน','var(--k-ruling)'], action:['กา�
   accusation:['คำกล่าวหา','var(--k-accusation)'], defense:['คำชี้แจง','var(--k-defense)'], finding:['ข้อเท็จจริงที่ กกต. วินิจฉัย','var(--k-finding)'],
   proc:['คำร้อง · หนังสือ · การไต่สวน','var(--accent)'], mention:['อื่น ๆ ที่ระบุวันที่','var(--faint)'] };
 const TKO = Object.keys(TK);
+// money dots are coloured by which side of the transfer the people in that lane are on
+const MROLE = { out:['โอนเงินออก','var(--m-out)'], in:['รับเงินโอน','var(--m-in)'], both:['ทั้งโอนออกและรับเงิน','var(--m-both)'] };
+const mRole = (e, l) => e.k==='money' ? ((e.ml&&e.ml[l])||'both') : null;
+const dotCol = (e, l) => e.k==='money' ? MROLE[mRole(e,l)][1] : TK[e.k][1];
 state.tk = new Set(TKO); state.tev = null;
 const MTH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const thDate = t => `${TH(t.getDate())} ${MTH[t.getMonth()]} ${TH(t.getFullYear()+543)}`;
@@ -1104,14 +1127,14 @@ function tRender(){
     const show=b.items.length>cap ? cap-1 : b.items.length;
     b.items.slice(0,show).forEach(([e,pi],j)=>{ const c=j%cols, r=Math.floor(j/cols);
       const x=b.x+(c-(cols-1)/2)*TSTEP, y=base-r*TSTEP;
-      dots.push({e,x,y,key:e._i+'|'+b.l+'|'+pi}); if(!tPos.has(e._i)) tPos.set(e._i,[]); tPos.get(e._i).push([x,y,pi]); });
+      dots.push({e,x,y,l:b.l,key:e._i+'|'+b.l+'|'+pi}); if(!tPos.has(e._i)) tPos.set(e._i,[]); tPos.get(e._i).push([x,y,pi]); });
     if(b.items.length>show) more.push({x:b.x,y:top0+li*laneH+11,n:b.items.length-show,items:b.items.map(p=>p[0]),key:b.l+'|'+b.x});
   });
   tG.dots.selectAll('circle').data(dots,d=>d.key).join(en=>en.append('circle').attr('class','tdot').attr('r',TR)
       .on('mouseenter',(ev,d)=>tHover(d.e)).on('mouseleave',()=>tHover(null))
       .on('click',(ev,d)=>{ ev.stopPropagation(); showEvent(d.e); }).call(s=>s.append('title')))
-    .attr('cx',d=>d.x).attr('cy',d=>d.y).style('fill',d=>TK[d.e.k][1])
-    .call(s=>s.select('title').text(d=>`${evDate(d.e)} · ${TK[d.e.k][0]}\n${d.e.text.length>160?d.e.text.slice(0,160)+'…':d.e.text}`));
+    .attr('cx',d=>d.x).attr('cy',d=>d.y).style('fill',d=>dotCol(d.e,d.l))
+    .call(s=>s.select('title').text(d=>`${evDate(d.e)} · ${d.e.k==='money'?`${TK.money[0]} · ${LANES.find(l=>l.id===d.l).sub}: ${MROLE[mRole(d.e,d.l)][0]}`:TK[d.e.k][0]}\n${d.e.text.length>160?d.e.text.slice(0,160)+'…':d.e.text}`));
   tG.more.selectAll('text').data(more,d=>d.key).join(en=>en.append('text').attr('class','tmore').attr('text-anchor','middle')
       .on('click',(ev,d)=>{ ev.stopPropagation(); showBin(d.items); }).call(s=>s.append('title')))
     .attr('x',d=>d.x).attr('y',d=>d.y).text(d=>'+'+TH(d.n)).call(s=>s.select('title').text('คลิกเพื่อดูทุกเหตุการณ์ในจุดนี้'));
@@ -1119,7 +1142,7 @@ function tRender(){
   const bars=E.filter(e=>e.t2).flatMap((e,i)=>e.lanes.map(l=>({e,l,key:e._i+'|'+l,o:i%4})));
   tG.bars.selectAll('rect').data(bars,d=>d.key).join('rect').attr('class','tbar')
     .attr('x',d=>tx(d.e.t)).attr('width',d=>Math.max(2,tx(d.e.t2)-tx(d.e.t))).attr('height',2.5).attr('rx',1)
-    .attr('y',d=>top0+LANES.findIndex(l=>l.id===d.l)*laneH+4+d.o*3.5).style('fill',d=>TK[d.e.k][1]);
+    .attr('y',d=>top0+LANES.findIndex(l=>l.id===d.l)*laneH+4+d.o*3.5).style('fill',d=>dotCol(d.e,d.l));
   tMark();
 }
 function tConn(e){
@@ -1200,7 +1223,7 @@ function selectTime(id, keepZoom){
     ${F.length?`<div class="group-h"><b>เรียงตามวันที่</b><span>${TH(F.length)} รายการ</span></div>${moreList(F,25,e=>tItem(e))}`:'<div class="hint">ไม่พบเหตุการณ์ที่ระบุวันที่ของบุคคลนี้ในตัวกรองนี้</div>'}`;
   bindDetail();
   const a=document.getElementById('allsec');
-  if(a) a.onclick=()=>{ state.tk=new Set(TKO); tkindsEl.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','true')); go('*'); selectTime(id); };
+  if(a) a.onclick=()=>{ TKO.forEach(k=>state.tk.add(k)); tkindsEl.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','true')); go('*'); selectTime(id); };
   det.parentElement.scrollTop=0;
   tMark();
   if(!keepZoom && F.length) tFitEvents(F, true);
@@ -1229,15 +1252,19 @@ const tkindsEl=document.getElementById('tkinds');
 Object.entries(TK).forEach(([k,[l,c]])=>{
   if(!EV.some(e=>e.k===k)) return;
   const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed','true');
-  b.innerHTML=`<span class="sw" style="background:${c};width:9px;height:9px;border-radius:50%"></span>${l}`;
+  b.dataset.k=k;
+  const dot=col=>`<span class="sw" style="background:${col};width:9px;height:9px;border-radius:50%"></span>`;
+  b.innerHTML = k==='money' ? `<span style="display:inline-flex;gap:2px">${Object.values(MROLE).map(r=>dot(r[1])).join('')}</span>${l}` : `${dot(c)}${l}`;
+  if(k==='money') b.title = Object.values(MROLE).map(r=>r[0]).join(' · ');
   b.onclick=()=>{ state.tk.has(k)?state.tk.delete(k):state.tk.add(k); b.setAttribute('aria-pressed',state.tk.has(k)); tRender(); if(state.sel) selectTime(state.sel,true); else showSection(); };
   tkindsEl.appendChild(b);
 });
+allToggle(tkindsEl, ()=>state.tk, TKO.filter(k=>EV.some(e=>e.k===k)), ()=>{ tRender(); if(state.sel) selectTime(state.sel,true); else showSection(); });
 const trEl=document.getElementById('tranges');
 trEl.insertAdjacentHTML('beforeend','<span class="hint" style="font-size:12px">ช่วงเวลา</span>');
 PRESETS.forEach(([l,a,b])=>{ const x=document.createElement('button'); x.className='chip'; x.textContent=l;
   x.onclick=()=>a?tZoomTo(day(a),day(b),true):tZoomTo(tExtent[0],tExtent[1],true); trEl.appendChild(x); });
-const timeLegend = `<span><i style="width:0;height:12px;border-radius:0;border-left:1.5px dashed var(--fg)"></i>วันสำคัญ</span><span><i style="width:16px;height:3px;border-radius:1px;background:var(--muted)"></i>ช่วงวันที่ (ระหว่าง…ถึง…)</span><span><i style="background:var(--faint)"></i>หนึ่งจุด = หนึ่งข้อความที่ระบุวันที่</span>`;
+const timeLegend = Object.values(MROLE).map(([l,c])=>`<span><i style="background:${c}"></i>${l}</span>`).join('') + `<span><i style="width:0;height:12px;border-radius:0;border-left:1.5px dashed var(--fg)"></i>วันสำคัญ</span><span><i style="width:16px;height:3px;border-radius:1px;background:var(--muted)"></i>ช่วงวันที่ (ระหว่าง…ถึง…)</span><span><i style="background:var(--faint)"></i>หนึ่งจุด = หนึ่งข้อความที่ระบุวันที่</span>`;
 
 /* ---------- view switch ---------- */
 const nodeLegend = document.getElementById('legend').innerHTML;

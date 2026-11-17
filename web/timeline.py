@@ -174,12 +174,23 @@ def build(DOCN, page_at, NL, hl_for, locate, edges, money, sections, resp, entit
             if ln not in lanes: lanes.append(ln)
         if k == 'proc' and 'proc' not in lanes: lanes.insert(0, 'proc')
         if not lanes: lanes = ['other']
+        # money: which side of the transfer each lane is on (sender / receiver / both),
+        # and only the lanes of the people in the transfer itself
+        ml = None
+        if k == 'money':
+            roles = {}
+            for i in mi:
+                roles.setdefault(lane_of(money[i]['from']), set()).add('out')
+                roles.setdefault(lane_of(money[i]['to']), set()).add('in')
+            ml = {l: ('both' if len(r) > 1 else next(iter(r))) for l, r in roles.items()}
+            lanes = list(ml)
         ev = {'d': c['dates'][0].isoformat(), 'dt': DOCN[s:e], 'k': k,
               'lanes': sorted(lanes, key=[l['id'] for l in LANES].index), 'who': who[:60],
               'sec': sec, 'page': page_at[L], 'text': text, 'hl': hl}
         if len(c['dates']) > 1:
             if c['rng']: ev['d2'] = max(c['dates']).isoformat()
             else: ev['ds'] = sorted({d.isoformat() for d in c['dates']})
+        if ml: ev['ml'] = ml
         if ei: ev['ei'] = ei[:40]
         if mi: ev['mi'] = mi
         events.append(ev)
