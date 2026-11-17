@@ -74,12 +74,14 @@ input[type=search]{width:100%;padding:7px 10px;border:1px solid var(--line);bord
 .secinfo h2{font-family:var(--font-head);font-size:16px;margin:0;text-wrap:balance}
 .secinfo p{margin:0;color:var(--muted);max-width:80ch}
 .secinfo .meta{font-size:12px;color:var(--faint)}
-svg#g{flex:1;width:100%;min-height:360px;display:block;cursor:grab}
+svg#g{flex:1;width:100%;min-height:0;display:block;cursor:grab}
 svg#g:active{cursor:grabbing}
-.legend{position:absolute;left:10px;bottom:10px;background:color-mix(in srgb,var(--surface) 88%,transparent);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px;max-width:calc(100% - 120px)}
+/* legend + zoom buttons sit in their own strip under the chart, so they never cover it */
+.gfoot{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px;padding:6px 10px;border-top:1px solid var(--line);background:var(--surface)}
+.legend{flex:1 1 300px;min-width:0;font-size:11.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:2px 0}
 .legend span{display:inline-flex;align-items:center;gap:5px;color:var(--muted)}
 .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.zoombtns{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
+.zoombtns{flex:none;display:flex;gap:4px;margin-left:auto}
 .zoombtns button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;font-size:16px}
 .zoombtns button.wide{width:auto;padding:0 10px;font-size:13px;font-weight:600}
 .zoombtns button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
@@ -205,7 +207,7 @@ button.pg:hover{background:var(--accent-soft);color:var(--accent)}
 
 /* timeline view: time on the x axis, one swimlane per group of people */
 #g[hidden],#t[hidden]{display:none}
-svg#t{flex:1;width:100%;min-height:360px;display:block;cursor:grab;touch-action:none}
+svg#t{flex:1;width:100%;min-height:0;display:block;cursor:grab;touch-action:none}
 svg#t:active{cursor:grabbing}
 .tlane-bg{fill:var(--sunken);opacity:.55}
 .tlane-sep{stroke:var(--line)}
@@ -239,7 +241,7 @@ svg#t:active{cursor:grabbing}
 .stmt .src button.tf{color:var(--accent)}
 
 @media (max-width:1100px){
-  .app{grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(560px,70vh) auto;height:auto}
+  .app{grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(640px,80vh) auto;height:auto}
   .right{grid-column:1/-1}
 }
 @media (max-width:720px){
@@ -306,8 +308,8 @@ svg#t:active{cursor:grabbing}
     <svg id="g" role="img" aria-label="กราฟความเชื่อมโยงระหว่างบุคคล"></svg>
     <svg id="t" role="img" aria-label="แผนภาพลำดับเวลา แยกช่องตามกลุ่มบุคคล" hidden></svg>
     <div class="empty" id="empty" hidden>ไม่มีความเชื่อมโยงในตัวกรองนี้</div>
-    <div class="legend" id="legend"></div>
-    <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button><button id="zfull" class="wide" aria-pressed="false" title="ขยายกราฟเต็มจอ (กด Esc เพื่อออก)">⛶ เต็มจอ</button></div>
+    <div class="gfoot"><div class="legend" id="legend"></div>
+    <div class="zoombtns"><button id="zin" aria-label="ซูมเข้า">+</button><button id="zout" aria-label="ซูมออก">−</button><button id="zfit" aria-label="พอดีจอ">⤢</button><button id="zfull" class="wide" aria-pressed="false" title="ขยายกราฟเต็มจอ (กด Esc เพื่อออก)">⛶ เต็มจอ</button></div></div>
   </main>
 
   <aside class="pane right">
@@ -1064,7 +1066,7 @@ function tLayout(){
   TLBL = tW<640 ? 98 : 150;
   tx0.range([TLBL+10, Math.max(TLBL+60, tW-14)]);
   if(keep) tSetView(keep[0], keep[1]); else tx=tT.rescaleX(tx0);
-  laneH = Math.max(44, (tHt-TAX-TMB-40)/LANES.length);   // 40px at the bottom stays clear of the legend
+  laneH = Math.max(38, (tHt-TAX-TMB-6)/LANES.length);
   tsvg.select('#tclip rect').attr('x',TLBL).attr('y',0).attr('width',Math.max(0,tW-TLBL)).attr('height',tHt);
   tz.extent([[TLBL,0],[tW,tHt]]).translateExtent([[TLBL,0],[tW,tHt]]);
 }
