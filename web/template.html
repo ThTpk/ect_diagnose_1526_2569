@@ -228,6 +228,8 @@ svg#t:active{cursor:grabbing}
 .tkin{fill:none;stroke-width:1.6;stroke-opacity:.6;pointer-events:none}
 .tdot.kin{stroke:var(--fg);stroke-width:1.4}
 .tdot.faint{opacity:.28}
+.tname{font-size:11px;fill:var(--fg);pointer-events:none;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.tname.hot{font-weight:700}
 .tmore{font-size:10px;font-weight:600;fill:var(--muted);cursor:pointer;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
 .tdate{font-variant-numeric:tabular-nums}
 .tday{display:flex;flex-direction:column;gap:6px}
@@ -1038,7 +1040,7 @@ const tG = {};
 tG.bg = tsvg.append('g'); tG.grid = tsvg.append('g').attr('class','tgrid');
 tG.plot = tsvg.append('g').attr('clip-path','url(#tclip)');
 tG.bars = tG.plot.append('g'); tG.mile = tG.plot.append('g').attr('class','tmile');
-tG.kin = tG.plot.append('g'); tG.dots = tG.plot.append('g'); tG.more = tG.plot.append('g'); tG.conn = tG.plot.append('g');
+tG.kin = tG.plot.append('g'); tG.dots = tG.plot.append('g'); tG.more = tG.plot.append('g'); tG.conn = tG.plot.append('g'); tG.names = tG.plot.append('g');
 tG.mlab = tsvg.append('g').attr('class','tmile'); tG.lbl = tsvg.append('g').attr('class','tlane-l'); tG.ax = tsvg.append('g').attr('class','tax');
 const TAX=26, TMB=20, TR=3.6, TSTEP=8.4, TBIN=9;
 let TLBL=150, tW=0, tHt=0, laneH=60, tT=d3.zoomIdentity, tPos=new Map(), tLastSec=null;
@@ -1172,7 +1174,26 @@ function tMark(){
   tG.dots.selectAll('circle').classed('dim',d=>!!s && !d.e.who.includes(s)).classed('hot',d=>d.e._i===h)
     .classed('kin',isKin).classed('faint',d=>!!he && !s && d.e!==he && !isKin(d));
   tG.bars.selectAll('rect').classed('dim',d=>!!s && !d.e.who.includes(s));
-  tConn(he);
+  tConn(he); tNames(he, kin);
+}
+// names beside the clicked dots and the dots linked to them (only the people of that lane);
+// the clicked event goes first, then the nearest linked dots; a label that would overlap is left out
+function tNames(he, kin){
+  const L=[];
+  if(he) tG.dots.selectAll('circle').each(d=>{
+    if(d.e!==he && !(d.e.who.some(p=>kin.has(p)))) return;
+    const ppl=d.e.who.filter(p=>PL[p]===d.l && (d.e===he || kin.has(p)));
+    if(!ppl.length) return;
+    const txt=ppl.slice(0,2).map(shortName).join(', ')+(ppl.length>2?` +${TH(ppl.length-2)}`:'');
+    L.push({d, txt, hot:d.e===he, key:d.key, pr:d.e===he?-1:Math.abs(d.x-(tPos.get(he._i)||[[d.x]])[0][0])});
+  });
+  L.sort((a,b)=>a.pr-b.pr);
+  const sel=tG.names.selectAll('text').data(L,d=>d.key).join('text').attr('class',d=>'tname'+(d.hot?' hot':''))
+    .attr('x',d=>d.d.x+TR+3).attr('y',d=>d.d.y+4).text(d=>d.txt);
+  const boxes=[];
+  sel.each(function(d){ const w=this.getComputedTextLength(), b=[d.d.x+TR+2, d.d.y-7, d.d.x+TR+5+w, d.d.y+6];
+    const ok=d.hot || !boxes.some(q=>b[0]<q[2]&&b[2]>q[0]&&b[1]<q[3]&&b[3]>q[1]);
+    if(ok) boxes.push(b); this.style.display=ok?'':'none'; });
 }
 function tHover(e){
   tConn(e || (state.tev!=null?EV[state.tev]:null));
