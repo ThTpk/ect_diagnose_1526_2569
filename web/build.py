@@ -9,7 +9,7 @@ OUT = os.path.join(HERE, 'index.html')
 
 # ---------- document index: whitespace-normalised text + page offsets ----------
 raw = open(DOC, encoding='utf-8').read()
-norm_chars, page_at = [], []
+norm_chars, page_at, NL = [], [], set()   # NL: positions of spaces that were line breaks
 page, prev_space = 0, True
 for part in re.split(r'(<!-- page \d+ -->)', raw):
     m = re.match(r'<!-- page (\d+) -->', part)
@@ -21,10 +21,11 @@ for part in re.split(r'(<!-- page \d+ -->)', raw):
     part = part.replace('**', '')
     for ch in part:
         if ch.isspace():
-            if prev_space: continue
-            ch = ' '; prev_space = True
-        else:
-            prev_space = False
+            if not prev_space:
+                norm_chars.append(' '); page_at.append(page); prev_space = True
+            if ch == '\n' and norm_chars: NL.add(len(norm_chars) - 1)
+            continue
+        prev_space = False
         norm_chars.append(ch); page_at.append(page)
 DOCN = ''.join(norm_chars)
 
@@ -56,6 +57,7 @@ def hl_for(i, n):
     """Highlight boxes [[page, [[x0,y0,x1,y1], ...]], ...] for DOCN[i:i+n]."""
     return PM.rects(i, n)
 
+LAST = {}   # DOCN span of the most recent successful locate()
 def locate(text, hint=None, want_hl=False):
     """Return (verbatim_text, page[, highlight]) or Nones."""
     t = nrm(text)
@@ -66,6 +68,7 @@ def locate(text, hint=None, want_hl=False):
     if hint:
         hits.sort(key=lambda i: abs(page_at[i] - hint))
     i = hits[0]
+    LAST['at'] = [i, i + len(t)]
     return (t, page_at[i], hl_for(i, len(t))) if want_hl else (t, page_at[i])
 
 # ---------- respondents ----------
@@ -122,7 +125,7 @@ for e in edges:
     stats['edge_ok'] += 1
     clean_edges.append({k: v for k, v in {
         'section': e['section'], 'from': e['from'], 'to': e['to'], 'kind': e['kind'],
-        'verb': e.get('verb', ''), 'text': t, 'page': p, 'hl': hl}.items()})
+        'verb': e.get('verb', ''), 'text': t, 'page': p, 'hl': hl, '_at': LAST['at']}.items()})
 for s in sections.values():
     t, p, hl = locate(s.get('summary'), (s.get('pages') or [None])[0], True)
     if s.get('summary'):
@@ -203,9 +206,14 @@ if os.path.exists(MONEY):
             if not x.startswith('R') and x not in entities:
                 entities[x] = {'id': x, 'label': x.split(':', 1)[1].split('@')[0], 'type': 'org' if x.startswith('O:') else 'person'}
         money.append({k: v for k, v in {'from': m['f'], 'to': m['t'], 'amt': m['amt'], 'date': m.get('date'),
-            'section': m['sec'], 'v': m.get('v'), 'text': t, 'page': p, 'hl': hl, 'note': m.get('note')}.items() if v is not None})
+            'section': m['sec'], 'v': m.get('v'), 'text': t, 'page': p, 'hl': hl, 'note': m.get('note'), '_at': LAST['at']}.items() if v is not None})
     print('money transfers located:', len(money), '/', len(money) + len(money_bad))
     for b in money_bad: print('  money NOT located:', b)
+
+# ---------- timeline: every dated event, by swimlane (see timeline.py) ----------
+import timeline
+TL = timeline.build(DOCN, page_at, NL, hl_for, locate, clean_edges, money, sections, resp, entities)
+for x in clean_edges + money: x.pop('_at', None)
 
 overview, ov_page, ov_hl = locate('ก่อนและหลังประกาศผลการเลือก คณะกรรมการการเลือกตั้งได้รับคำร้องและรายงานกรณีมีเหตุอันควรสงสัยหรือความปรากฏว่ามีบุคคลรวม ๔๒๗ ราย', None, True)
 
@@ -219,6 +227,7 @@ data = {
     'edges': clean_edges,
     'orders': clean_orders,
     'money': money,
+    'timeline': TL,
     'overview': overview, 'overviewPage': ov_page,
 }
 js = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
